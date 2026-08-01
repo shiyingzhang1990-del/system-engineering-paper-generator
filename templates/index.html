@@ -18,307 +18,103 @@
             --warning: #b8860b;
             --code-bg: #faf8f5;
         }
-
         * { margin: 0; padding: 0; box-sizing: border-box; }
-
         body {
-            font-family: "Noto Serif SC", "Source Han Serif SC", "Songti SC", "SimSun", "STSong", serif;
-            background: var(--bg);
-            color: var(--text);
-            line-height: 1.7;
-            min-height: 100vh;
+            font-family: "Noto Serif SC", "Source Han Serif SC", "Songti SC", "SimSun", serif;
+            background: var(--bg); color: var(--text); line-height: 1.7; min-height: 100vh;
         }
-
         .header {
-            background: var(--primary);
-            color: #fff;
-            padding: 20px 0;
-            border-bottom: 3px solid var(--accent);
-            position: sticky;
-            top: 0;
-            z-index: 100;
+            background: var(--primary); color: #fff; padding: 20px 0;
+            border-bottom: 3px solid var(--accent); position: sticky; top: 0; z-index: 100;
             box-shadow: 0 2px 12px rgba(0,0,0,0.15);
         }
-
         .header-inner {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 0 24px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            max-width: 1400px; margin: 0 auto; padding: 0 24px;
+            display: flex; justify-content: space-between; align-items: center;
         }
-
-        .header h1 {
-            font-size: 1.3rem;
-            font-weight: 700;
-            letter-spacing: 1px;
-        }
-        .header .subtitle {
-            font-size: 0.8rem;
-            opacity: 0.75;
-            margin-top: 2px;
-        }
-        .header .badge {
-            background: var(--accent);
-            padding: 4px 14px;
-            border-radius: 4px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            letter-spacing: 1px;
-        }
-
+        .header h1 { font-size: 1.3rem; font-weight: 700; letter-spacing: 1px; }
+        .header .subtitle { font-size: 0.8rem; opacity: 0.75; margin-top: 2px; }
+        .header .badge { background: var(--accent); padding: 4px 14px; border-radius: 4px; font-size: 0.75rem; font-weight: 600; }
         .container {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 24px;
-            display: grid;
-            grid-template-columns: 480px 1fr;
-            gap: 24px;
-            min-height: calc(100vh - 120px);
+            max-width: 1400px; margin: 0 auto; padding: 24px;
+            display: grid; grid-template-columns: 480px 1fr; gap: 24px; min-height: calc(100vh - 120px);
         }
-
-        @media (max-width: 1024px) {
-            .container {
-                grid-template-columns: 1fr;
-            }
-        }
-
+        @media (max-width: 1024px) { .container { grid-template-columns: 1fr; } }
         .panel {
-            background: var(--card-bg);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 24px;
-            box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+            background: var(--card-bg); border: 1px solid var(--border);
+            border-radius: 8px; padding: 24px; box-shadow: 0 1px 4px rgba(0,0,0,0.06);
         }
-
         .panel-title {
-            font-size: 1.05rem;
-            font-weight: 700;
-            margin-bottom: 16px;
-            padding-bottom: 12px;
-            border-bottom: 2px solid var(--primary);
-            color: var(--primary);
-            letter-spacing: 0.5px;
+            font-size: 1.05rem; font-weight: 700; margin-bottom: 16px;
+            padding-bottom: 12px; border-bottom: 2px solid var(--primary); color: var(--primary);
         }
-
-        .form-group {
-            margin-bottom: 16px;
-        }
-        .form-group label {
-            display: block;
-            font-size: 0.9rem;
-            font-weight: 600;
-            margin-bottom: 6px;
-            color: var(--text);
-        }
-        .form-group .hint {
-            font-size: 0.78rem;
-            color: var(--text-light);
-            margin-bottom: 4px;
-        }
-
+        .form-group { margin-bottom: 16px; }
+        .form-group label { display: block; font-size: 0.9rem; font-weight: 600; margin-bottom: 6px; color: var(--text); }
+        .form-group .hint { font-size: 0.78rem; color: var(--text-light); margin-bottom: 4px; }
         textarea, input[type="text"], input[type="password"], select {
-            width: 100%;
-            padding: 10px 14px;
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            font-size: 0.9rem;
-            font-family: inherit;
-            background: var(--code-bg);
-            transition: border-color 0.2s;
-            resize: vertical;
+            width: 100%; padding: 10px 14px; border: 1px solid var(--border);
+            border-radius: 6px; font-size: 0.9rem; font-family: inherit; background: var(--code-bg);
+            transition: border-color 0.2s; resize: vertical;
         }
         textarea:focus, input:focus, select:focus {
-            outline: none;
-            border-color: var(--primary-light);
-            box-shadow: 0 0 0 3px rgba(44,95,138,0.1);
+            outline: none; border-color: var(--primary-light); box-shadow: 0 0 0 3px rgba(44,95,138,0.1);
         }
         textarea { min-height: 280px; }
-
         .btn {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            padding: 12px 24px;
-            border: none;
-            border-radius: 6px;
-            font-size: 0.95rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-            letter-spacing: 0.5px;
-            width: 100%;
+            display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+            padding: 12px 24px; border: none; border-radius: 6px; font-size: 0.95rem;
+            font-weight: 600; cursor: pointer; transition: all 0.2s; width: 100%;
         }
-        .btn-primary {
-            background: var(--primary);
-            color: #fff;
-        }
+        .btn-primary { background: var(--primary); color: #fff; }
         .btn-primary:hover { background: var(--primary-light); }
-        .btn-primary:disabled {
-            background: #999;
-            cursor: not-allowed;
-        }
-        .btn-secondary {
-            background: var(--bg);
-            color: var(--text);
-            border: 1px solid var(--border);
-        }
-        .btn-secondary:hover { background: var(--border); }
-
-        .btn-row {
-            display: flex;
-            gap: 10px;
-            margin-top: 16px;
-        }
-
+        .btn-primary:disabled { background: #999; cursor: not-allowed; }
+        .btn-secondary { background: var(--bg); color: var(--text); border: 1px solid var(--border); }
+        .btn-row { display: flex; gap: 10px; margin-top: 16px; }
         .status-bar {
-            margin-top: 12px;
-            padding: 10px 14px;
-            border-radius: 6px;
-            font-size: 0.85rem;
-            display: none;
+            margin-top: 12px; padding: 10px 14px; border-radius: 6px; font-size: 0.85rem; display: none;
         }
         .status-bar.show { display: block; }
-        .status-bar.info {
-            background: #e8f0fe;
-            color: #1a3a5c;
-            border: 1px solid #c5d9f0;
-        }
-        .status-bar.error {
-            background: #fde8e8;
-            color: #8b1a1a;
-            border: 1px solid #f5c5c5;
-        }
-        .status-bar.success {
-            background: #e8f5ee;
-            color: #1a5c3a;
-            border: 1px solid #c5e8d5;
-        }
-
+        .status-bar.info { background: #e8f0fe; color: #1a3a5c; border: 1px solid #c5d9f0; }
+        .status-bar.error { background: #fde8e8; color: #8b1a1a; border: 1px solid #f5c5c5; }
+        .status-bar.success { background: #e8f5ee; color: #1a5c3a; border: 1px solid #c5e8d5; }
         .output-area {
-            background: var(--code-bg);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 24px;
-            max-height: 78vh;
-            overflow-y: auto;
-            font-size: 0.9rem;
-            line-height: 1.8;
-            white-space: pre-wrap;
-            word-wrap: break-word;
+            background: var(--code-bg); border: 1px solid var(--border); border-radius: 8px;
+            padding: 24px; max-height: 78vh; overflow-y: auto; font-size: 0.9rem;
+            line-height: 1.8; white-space: pre-wrap; word-wrap: break-word;
         }
-        .output-area.empty {
-            color: var(--text-light);
-            text-align: center;
-            padding: 60px 20px;
-            font-style: italic;
-        }
-
+        .output-area.empty { color: var(--text-light); text-align: center; padding: 60px 20px; font-style: italic; }
         .spinner {
-            display: none;
-            width: 18px;
-            height: 18px;
-            border: 2px solid rgba(255,255,255,0.3);
-            border-top-color: #fff;
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
+            display: none; width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.3);
+            border-top-color: #fff; border-radius: 50%; animation: spin 0.8s linear infinite;
         }
         @keyframes spin { to { transform: rotate(360deg); } }
-
-        .info-cards {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            margin-top: 12px;
-        }
+        .info-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
         .info-card {
-            background: var(--code-bg);
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            padding: 12px;
-            text-align: center;
+            background: var(--code-bg); border: 1px solid var(--border);
+            border-radius: 6px; padding: 12px; text-align: center;
         }
-        .info-card .value {
-            font-size: 1.4rem;
-            font-weight: 700;
-            color: var(--primary);
-        }
-        .info-card .label {
-            font-size: 0.75rem;
-            color: var(--text-light);
-            margin-top: 2px;
-        }
-
-        .word-count {
-            font-size: 0.78rem;
-            color: var(--text-light);
-            text-align: right;
-            margin-top: 4px;
-        }
-
-        .section-nav {
-            position: sticky;
-            top: 100px;
-        }
-
+        .info-card .value { font-size: 1.4rem; font-weight: 700; color: var(--primary); }
+        .info-card .label { font-size: 0.75rem; color: var(--text-light); margin-top: 2px; }
+        .word-count { font-size: 0.78rem; color: var(--text-light); text-align: right; margin-top: 4px; }
         .note {
-            background: #fffef5;
-            border: 1px solid #e8e0c5;
-            border-left: 3px solid var(--warning);
-            padding: 12px 16px;
-            border-radius: 4px;
-            font-size: 0.82rem;
-            color: #6b5a1a;
-            margin-top: 12px;
+            background: #fffef5; border: 1px solid #e8e0c5; border-left: 3px solid var(--warning);
+            padding: 12px 16px; border-radius: 4px; font-size: 0.82rem; color: #6b5a1a; margin-top: 12px;
         }
-
-        /* Markdown-style rendering for output */
-        .output-rendered h2 { font-size: 1.2rem; margin: 20px 0 10px; color: var(--primary); border-bottom: 1px solid var(--border); padding-bottom: 6px; }
-        .output-rendered h3 { font-size: 1.05rem; margin: 16px 0 8px; color: var(--primary-light); }
-        .output-rendered blockquote { border-left: 3px solid var(--accent); margin: 12px 0; padding: 6px 16px; background: #fdf8f6; color: #5a3a2a; }
-        .output-rendered code { background: var(--code-bg); padding: 2px 6px; border-radius: 3px; font-size: 0.85rem; }
-        .output-rendered pre { background: #1a1a2e; color: #e0e0e0; padding: 16px; border-radius: 6px; overflow-x: auto; margin: 12px 0; }
-
         .stage-divider {
-            background: linear-gradient(135deg, #f0f4f8, #e8ecf2);
-            border: 1px solid var(--border);
-            border-left: 4px solid var(--primary);
-            padding: 12px 18px;
-            margin: 20px 0 12px;
-            border-radius: 4px;
-            font-weight: 700;
-            font-size: 1rem;
-            color: var(--primary);
+            background: linear-gradient(135deg, #f0f4f8, #e8ecf2); border: 1px solid var(--border);
+            border-left: 4px solid var(--primary); padding: 12px 18px; margin: 20px 0 12px;
+            border-radius: 4px; font-weight: 700; font-size: 1rem; color: var(--primary);
         }
         .stage-badge {
-            display: inline-block;
-            padding: 3px 12px;
-            border-radius: 3px;
-            font-size: 0.8rem;
-            font-weight: 700;
-            letter-spacing: 0.5px;
-            margin-right: 8px;
+            display: inline-block; padding: 3px 12px; border-radius: 3px;
+            font-size: 0.8rem; font-weight: 700; margin-right: 8px;
         }
-        .stage-active {
-            background: var(--primary);
-            color: #fff;
-        }
-        .stage-done {
-            background: var(--success);
-            color: #fff;
-        }
-        .stage-content {
-            margin: 8px 0;
-        }
+        .stage-active { background: var(--primary); color: #fff; }
+        .stage-done { background: var(--success); color: #fff; }
+        .stage-content { margin: 8px 0; }
         .stage-error {
-            background: #fde8e8;
-            color: #8b1a1a;
-            padding: 10px 14px;
-            border-radius: 4px;
-            border: 1px solid #f5c5c5;
-            margin: 8px 0;
+            background: #fde8e8; color: #8b1a1a; padding: 10px 14px;
+            border-radius: 4px; border: 1px solid #f5c5c5; margin: 8px 0;
         }
     </style>
 </head>
@@ -327,9 +123,9 @@
         <div class="header-inner">
             <div>
                 <h1>《系统工程》实证论文重构系统</h1>
-                <div class="subtitle">System Engineering Empirical Paper Architect — 期刊适配诊断 · 结构重排 · 全文润色</div>
+                <div class="subtitle">期刊适配诊断 · 结构重排 · 全文润色</div>
             </div>
-            <span class="badge">v2.0 · Dual API</span>
+            <span class="badge">v3.0 · 三阶段</span>
         </div>
     </header>
 
@@ -347,7 +143,7 @@
                 <div class="form-group">
                     <label>论文全文</label>
                     <div class="hint">粘贴完整的论文正文，系统将按《系统工程》范式进行诊断与重构</div>
-                    <textarea id="paperText" placeholder="在此粘贴论文全文内容...&#10;&#10;系统将依次完成：&#10;1. 期刊适配诊断&#10;2. 主线提炼与系统框架&#10;3. 全文结构重排&#10;4. 理论链修复&#10;5. 语言润色与AI痕迹清除&#10;6. 风险清单与质量评分"></textarea>
+                    <textarea id="paperText" placeholder="在此粘贴论文全文内容...&#10;&#10;系统分三个阶段依次处理：&#10;阶段1：期刊适配诊断 + 建议全文结构&#10;阶段2：完整修改稿&#10;阶段3：修改说明 + 风险清单与质量评分"></textarea>
                     <div class="word-count" id="wordCount">字数：0</div>
                 </div>
 
@@ -355,13 +151,13 @@
                 <div class="form-group" id="apiKeyGroup">
                     <label>API Key</label>
                     <div class="hint">
-                        支持 Anthropic（<code>sk-ant-...</code>）和 DeepSeek（<code>sk-...</code>），系统自动识别密钥类型
+                        支持 Anthropic（<code>sk-ant-...</code>）和 DeepSeek（<code>sk-...</code>），系统自动识别
                     </div>
                     <input type="password" id="apiKey" placeholder="sk-ant-... 或 sk-..." oninput="onApiKeyInput()">
                     <div id="apiKeyDetect" style="font-size:0.78rem;margin-top:4px;color:var(--text-light);"></div>
                 </div>
                 {% else %}
-                <div class="note" style="margin-bottom: 12px; background: #e8f5ee; border-color: #c5e8d5; color: #1a5c3a;">
+                <div class="note" style="margin-bottom:12px;background:#e8f5ee;border-color:#c5e8d5;color:#1a5c3a;">
                     API Key 已由管理员配置，用户无需输入。
                 </div>
                 {% endif %}
@@ -380,12 +176,12 @@
                         <optgroup label="Anthropic Claude">
                             <option value="claude-opus-4-7">Claude Opus 4.7（最强，32K输出）</option>
                             <option value="claude-sonnet-4-6">Claude Sonnet 4.6（推荐，16K输出）</option>
-                            <option value="claude-haiku-4-5-20251001">Claude Haiku 4.5（快速，8K输出，可能截断）</option>
+                            <option value="claude-haiku-4-5-20251001">Claude Haiku 4.5（快速，8K输出）</option>
                         </optgroup>
                         <optgroup label="DeepSeek">
                             <option value="deepseek-v4-pro">DeepSeek V4 Pro（推荐，32K输出）</option>
-                            <option value="deepseek-v4-flash">DeepSeek V4 Flash（快速，8K输出，可能截断）</option>
-                            <option value="deepseek-chat">DeepSeek Chat（通用，8K输出，可能截断）</option>
+                            <option value="deepseek-v4-flash">DeepSeek V4 Flash（快速，8K输出）</option>
+                            <option value="deepseek-chat">DeepSeek Chat（通用，8K输出）</option>
                         </optgroup>
                     </select>
                 </div>
@@ -401,18 +197,12 @@
                 <div class="status-bar" id="statusBar"></div>
 
                 <div class="info-cards">
-                    <div class="info-card">
-                        <div class="value" id="statChars">--</div>
-                        <div class="label">输入字数</div>
-                    </div>
-                    <div class="info-card">
-                        <div class="value" id="statTime">--</div>
-                        <div class="label">处理耗时</div>
-                    </div>
+                    <div class="info-card"><div class="value" id="statChars">--</div><div class="label">输入字数</div></div>
+                    <div class="info-card"><div class="value" id="statTime">--</div><div class="label">处理耗时</div></div>
                 </div>
 
                 <div class="note">
-                    <strong>使用说明：</strong>系统基于《系统工程》期刊实证论文研究逻辑设计。请确保论文包含完整的研究设计信息（数据来源、变量定义、模型设定、实证结果等）。系统不会虚构任何数据或结果——缺失内容将标注【需要作者补充】。
+                    <strong>使用说明：</strong>请确保论文包含完整信息（数据来源、变量定义、模型设定、实证结果等）。系统不会虚构任何数据——缺失内容将标注【需要作者补充】。三阶段顺序执行，每个阶段独立 API 调用，避免输出截断。
                 </div>
             </div>
         </div>
@@ -423,12 +213,10 @@
                 <div class="panel-title">诊断与重构结果</div>
                 <div class="output-area empty" id="outputArea">
                     处理结果将在此显示。<br><br>
-                    系统将输出五部分内容：<br>
-                    <strong>一、期刊适配诊断</strong> — 识别研究主线、系统边界、关键问题<br>
-                    <strong>二、建议的全文结构</strong> — 各章节核心问题与题目建议<br>
-                    <strong>三、完整修改稿</strong> — 逐段重写，保留全部有效信息<br>
-                    <strong>四、修改说明</strong> — 逻辑补强、重复压缩、因果降级等<br>
-                    <strong>五、风险清单与质量评分</strong> — 100分制，多维度评估
+                    系统按三个阶段依次处理：<br>
+                    <strong>阶段1</strong> — 期刊适配诊断 + 建议全文结构<br>
+                    <strong>阶段2</strong> — 完整修改稿<br>
+                    <strong>阶段3</strong> — 修改说明 + 风险清单与质量评分
                 </div>
             </div>
         </div>
@@ -437,7 +225,9 @@
     <script>
         let abortController = null;
         let processingStartTime = null;
-        let currentProvider = "anthropic";  // 当前识别的平台
+        let currentProvider = "anthropic";
+        let stage1Result = "";
+        let stage2Result = "";
 
         const paperText = document.getElementById("paperText");
         const outputArea = document.getElementById("outputArea");
@@ -451,32 +241,28 @@
         const apiKeyInput = document.getElementById("apiKey");
         const apiKeyDetect = document.getElementById("apiKeyDetect");
 
-        // 模型映射
         const anthropicModels = [
             { value: "claude-opus-4-7", label: "Claude Opus 4.7（最强，32K输出）" },
             { value: "claude-sonnet-4-6", label: "Claude Sonnet 4.6（推荐，16K输出）" },
-            { value: "claude-haiku-4-5-20251001", label: "Claude Haiku 4.5（快速，8K输出，可能截断）" },
+            { value: "claude-haiku-4-5-20251001", label: "Claude Haiku 4.5（快速，8K输出）" },
         ];
         const deepseekModels = [
             { value: "deepseek-v4-pro", label: "DeepSeek V4 Pro（推荐，32K输出）" },
-            { value: "deepseek-v4-flash", label: "DeepSeek V4 Flash（快速，8K输出，可能截断）" },
-            { value: "deepseek-chat", label: "DeepSeek Chat（通用，8K输出，可能截断）" },
+            { value: "deepseek-v4-flash", label: "DeepSeek V4 Flash（快速，8K输出）" },
+            { value: "deepseek-chat", label: "DeepSeek Chat（通用，8K输出）" },
         ];
 
         function updateModelSelect(provider) {
-            const models = provider === "deepseek" ? deepseekModels : anthropicModels;
-            const otherModels = provider === "deepseek" ? anthropicModels : deepseekModels;
-            const otherLabel = provider === "deepseek" ? "Anthropic Claude" : "DeepSeek";
-
+            var models = provider === "deepseek" ? deepseekModels : anthropicModels;
+            var otherModels = provider === "deepseek" ? anthropicModels : deepseekModels;
+            var otherLabel = provider === "deepseek" ? "Anthropic Claude" : "DeepSeek";
             modelSelect.innerHTML =
-                `<optgroup label="${provider === 'deepseek' ? 'DeepSeek' : 'Anthropic Claude'}">` +
-                models.map(m => `<option value="${m.value}">${m.label}</option>`).join("") +
-                `</optgroup>` +
-                `<optgroup label="${otherLabel}" disabled>` +
-                otherModels.map(m => `<option value="${m.value}">${m.label}</option>`).join("") +
-                `</optgroup>`;
-
-            // 自动选第一个模型
+                '<optgroup label="' + (provider === 'deepseek' ? 'DeepSeek' : 'Anthropic Claude') + '">' +
+                models.map(function(m) { return '<option value="' + m.value + '">' + m.label + '</option>'; }).join("") +
+                '</optgroup>' +
+                '<optgroup label="' + otherLabel + '" disabled>' +
+                otherModels.map(function(m) { return '<option value="' + m.value + '">' + m.label + '</option>'; }).join("") +
+                '</optgroup>';
             modelSelect.value = models[0].value;
         }
 
@@ -488,28 +274,17 @@
         }
 
         function onApiKeyInput() {
-            const key = apiKeyInput ? apiKeyInput.value.trim() : "";
-            const detected = detectProviderFromKey(key);
-
-            if (!key) {
-                if (apiKeyDetect) apiKeyDetect.innerHTML = "";
-                currentProvider = providerSelect.value;
-                updateModelSelect(currentProvider);
-                return;
-            }
-
+            var key = apiKeyInput ? apiKeyInput.value.trim() : "";
+            var detected = detectProviderFromKey(key);
+            if (!key) { if (apiKeyDetect) apiKeyDetect.innerHTML = ""; currentProvider = providerSelect.value; updateModelSelect(currentProvider); return; }
             if (detected === "anthropic") {
-                if (apiKeyDetect) apiKeyDetect.innerHTML = '<span style="color:#2d8a56;">✓ 识别为 <strong>Anthropic</strong> 密钥，将调用 Claude 模型</span>';
-                currentProvider = "anthropic";
-                providerSelect.value = "anthropic";
-                updateModelSelect("anthropic");
+                if (apiKeyDetect) apiKeyDetect.innerHTML = '<span style="color:#2d8a56;">&#10003; 识别为 <strong>Anthropic</strong> 密钥</span>';
+                currentProvider = "anthropic"; providerSelect.value = "anthropic"; updateModelSelect("anthropic");
             } else if (detected === "deepseek") {
-                if (apiKeyDetect) apiKeyDetect.innerHTML = '<span style="color:#2d8a56;">✓ 识别为 <strong>DeepSeek</strong> 密钥，将调用 DeepSeek 模型</span>';
-                currentProvider = "deepseek";
-                providerSelect.value = "deepseek";
-                updateModelSelect("deepseek");
+                if (apiKeyDetect) apiKeyDetect.innerHTML = '<span style="color:#2d8a56;">&#10003; 识别为 <strong>DeepSeek</strong> 密钥</span>';
+                currentProvider = "deepseek"; providerSelect.value = "deepseek"; updateModelSelect("deepseek");
             } else {
-                if (apiKeyDetect) apiKeyDetect.innerHTML = '<span style="color:#b8860b;">⚠ 未识别，请输入有效的 API Key（<code>sk-ant-...</code> 或 <code>sk-...</code>）</span>';
+                if (apiKeyDetect) apiKeyDetect.innerHTML = '<span style="color:#b8860b;">&#9888; 未识别的密钥格式</span>';
             }
         }
 
@@ -518,262 +293,156 @@
             updateModelSelect(currentProvider);
         }
 
-        // 字数统计
-        paperText.addEventListener("input", () => {
-            const len = paperText.value.length;
-            document.getElementById("wordCount").textContent = `字数：${len}`;
+        paperText.addEventListener("input", function() {
+            var len = paperText.value.length;
+            document.getElementById("wordCount").textContent = "\u5b57\u6570\uff1a" + len;
             document.getElementById("statChars").textContent = len > 0 ? len.toLocaleString() : "--";
         });
 
-        function showStatus(msg, type) {
-            statusBar.textContent = msg;
-            statusBar.className = `status-bar ${type} show`;
-        }
-
-        function hideStatus() {
-            statusBar.className = "status-bar";
-        }
-
+        function showStatus(msg, type) { statusBar.textContent = msg; statusBar.className = "status-bar " + type + " show"; }
+        function hideStatus() { statusBar.className = "status-bar"; }
         function setLoading(loading) {
             btnProcess.disabled = loading;
             spinner.style.display = loading ? "inline-block" : "none";
-            btnProcessText.textContent = loading ? "处理中..." : "开始诊断与重构";
+            btnProcessText.textContent = loading ? "\u5904\u7406\u4e2d..." : "\u5f00\u59cb\u8bca\u65ad\u4e0e\u91cd\u6784";
             btnStop.style.display = loading ? "inline-flex" : "none";
         }
 
         function startProcessing() {
-            const text = paperText.value.trim();
-            if (!text) {
-                showStatus("请先粘贴论文内容", "error");
-                return;
-            }
-            if (text.length < 500) {
-                showStatus("论文内容过短（至少500字），请检查后重新提交", "error");
-                return;
-            }
-            // 统一使用三阶段分步处理，避免输出截断
-            startStreamProcessing();
+            var text = paperText.value.trim();
+            if (!text) { showStatus("\u8bf7\u5148\u7c98\u8d34\u8bba\u6587\u5185\u5bb9", "error"); return; }
+            if (text.length < 500) { showStatus("\u8bba\u6587\u5185\u5bb9\u8fc7\u77ed\uff08\u81f3\u5c11500\u5b57\uff09", "error"); return; }
+            runAllStages();
         }
 
         function getRequestPayload() {
-            const apiKey = apiKeyInput ? apiKeyInput.value.trim() : "";
-            const model = modelSelect.value;
-            const title = document.getElementById("paperTitle").value.trim();
-            const provider = currentProvider;
             return {
                 paper_text: paperText.value,
-                paper_title: title,
-                api_key: apiKey,
-                model: model,
-                provider: provider
+                paper_title: document.getElementById("paperTitle").value.trim(),
+                api_key: apiKeyInput ? apiKeyInput.value.trim() : "",
+                model: modelSelect.value,
+                provider: currentProvider
             };
         }
 
-        // 字数统计
-        paperText.addEventListener("input", () => {
-            const len = paperText.value.length;
-            document.getElementById("wordCount").textContent = `字数：${len}`;
-            document.getElementById("statChars").textContent = len > 0 ? len.toLocaleString() : "--";
-        });
+        // ===== 三阶段独立 API 调用 =====
 
-        function showStatus(msg, type) {
-            statusBar.textContent = msg;
-            statusBar.className = `status-bar ${type} show`;
-        }
-
-        function hideStatus() {
-            statusBar.className = "status-bar";
-        }
-
-        function setLoading(loading) {
-            btnProcess.disabled = loading;
-            spinner.style.display = loading ? "inline-block" : "none";
-            btnProcessText.textContent = loading ? "处理中..." : "开始诊断与重构";
-            btnStop.style.display = loading ? "inline-flex" : "none";
-        }
-
-        function startProcessing() {
-            const text = paperText.value.trim();
-            if (!text) {
-                showStatus("请先粘贴论文内容", "error");
-                return;
-            }
-            if (text.length < 500) {
-                showStatus("论文内容过短（至少500字），请检查后重新提交", "error");
-                return;
-            }
-
-            // Haiku 用同步模式（更快），其他用流式
-            const model = modelSelect.value;
-            const useStream = !model.includes("haiku");
-            if (useStream) {
-                startStreamProcessing();
-            } else {
-                startSyncProcessing();
-            }
-        }
-
-        function getRequestPayload() {
-            const apiKey = apiKeyInput ? apiKeyInput.value.trim() : "";
-            const model = modelSelect.value;
-            const title = document.getElementById("paperTitle").value.trim();
-            const provider = providerSelect.value;
-            return {
-                paper_text: paperText.value,
-                paper_title: title,
-                api_key: apiKey,
-                model: model,
-                provider: provider
-            };
-        }
-
-        async function startStreamProcessing() {
+        async function runAllStages() {
             abortController = new AbortController();
             setLoading(true);
             outputArea.className = "output-area";
             outputArea.innerHTML = "";
             processingStartTime = Date.now();
             hideStatus();
+            stage1Result = "";
+            stage2Result = "";
 
-            const stageLabels = {
-                "1_start": '<div class="stage-divider"><span class="stage-badge stage-active">阶段 1/3</span> 期刊适配诊断 + 建议全文结构</div>',
-                "2_start": '<div class="stage-divider"><span class="stage-badge stage-active">阶段 2/3</span> 完整修改稿</div>',
-                "3_start": '<div class="stage-divider"><span class="stage-badge stage-active">阶段 3/3</span> 修改说明 + 风险清单与质量评分</div>',
-                "1_done": '',
-                "2_done": '',
-                "3_done": '',
-                "all_done": '',
-            };
+            await runStage(1, "\u671f\u520a\u9002\u914d\u8bca\u65ad + \u5efa\u8bae\u5168\u6587\u7ed3\u6784");
+            if (!stage1Result) { setLoading(false); return; }
+
+            await runStage(2, "\u5b8c\u6574\u4fee\u6539\u7a3f");
+            if (!stage2Result) { setLoading(false); return; }
+
+            await runStage(3, "\u4fee\u6539\u8bf4\u660e + \u98ce\u9669\u6e05\u5355\u4e0e\u8d28\u91cf\u8bc4\u5206");
+
+            setLoading(false);
+            abortController = null;
+        }
+
+        async function runStage(stageNum, label) {
+            var signal = abortController.signal;
+            outputArea.innerHTML += '<div class="stage-divider"><span class="stage-badge stage-active">阶段 ' + stageNum + '/3</span> ' + label + '</div><div id="stage' + stageNum + '-content" class="stage-content"></div>';
+            outputArea.scrollTop = outputArea.scrollHeight;
+            showStatus("\u9636\u6bb5 " + stageNum + "/3\uff1a" + label + "...", "info");
+
+            var payload = getRequestPayload();
+            var endpoint, extraData = {};
+            if (stageNum === 1) { endpoint = "/api/stage1"; }
+            else if (stageNum === 2) { endpoint = "/api/stage2"; extraData = { stage1_output: stage1Result }; }
+            else { endpoint = "/api/stage3"; extraData = { stage1_output: stage1Result, stage2_output: stage2Result }; }
 
             try {
-                const response = await fetch("/api/process/staged", {
+                var response = await fetch(endpoint, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(getRequestPayload()),
-                    signal: abortController.signal
+                    body: JSON.stringify(Object.assign({}, payload, extraData)),
+                    signal: signal
                 });
 
-                const reader = response.body.getReader();
-                const decoder = new TextDecoder();
-                let buffer = "";
-                let fullText = "";
-                let currentStage = "";
-                let allDone = false;
+                var reader = response.body.getReader();
+                var decoder = new TextDecoder();
+                var buf = "", rawText = "", doneReceived = false;
+                var contentEl = document.getElementById("stage" + stageNum + "-content");
 
                 while (true) {
-                    const { done, value } = await reader.read();
-                    if (done) break;
-
-                    buffer += decoder.decode(value, { stream: true });
-                    const lines = buffer.split("\n");
-                    buffer = lines.pop() || "";
-
-                    for (const line of lines) {
-                        if (!line.startsWith("data: ")) continue;
-                        const data = line.slice(6).trim();
-                        if (!data) continue;
-
+                    var chunk = await reader.read();
+                    if (chunk.done) break;
+                    buf += decoder.decode(chunk.value, { stream: true });
+                    var lines = buf.split("\n");
+                    buf = lines.pop() || "";
+                    for (var i = 0; i < lines.length; i++) {
+                        var line = lines[i];
+                        if (line.indexOf("data: ") !== 0) continue;
+                        var data = line.slice(6).trim();
+                        if (!data || data === "[DONE]") { doneReceived = true; continue; }
                         try {
-                            const parsed = JSON.parse(data);
-                            const stage = parsed.stage;
-
-                            if (stage === "error") {
-                                outputArea.innerHTML += `<div class="stage-error">[错误] ${escapeHtml(parsed.error)}</div>`;
-                                continue;
-                            }
-
-                            // Stage start markers
-                            if (stage === "1_start" || stage === "2_start" || stage === "3_start") {
-                                if (currentStage !== stage) {
-                                    // Mark previous stage as done
-                                    if (currentStage && currentStage !== stage) {
-                                        const prevBadge = outputArea.querySelector('.stage-active:last-of-type');
-                                        if (prevBadge) prevBadge.classList.add('stage-done');
-                                    }
-                                    currentStage = stage;
-                                    outputArea.innerHTML += stageLabels[stage];
-                                    showStatus(parsed.label || `正在处理阶段 ${stage[0]}...`, "info");
-                                }
-                                continue;
-                            }
-
-                            // Stage content
-                            if (stage === "1" || stage === "2" || stage === "3") {
-                                fullText += parsed.content;
-                                // Show streaming content in its own block
-                                let stageEl = document.getElementById(`stage-${stage}`);
-                                if (!stageEl) {
-                                    outputArea.innerHTML += `<div id="stage-${stage}" class="stage-content"></div>`;
-                                    stageEl = document.getElementById(`stage-${stage}`);
-                                }
-                                stageEl.innerHTML = escapeHtml(stageEl.textContent + parsed.content);
+                            var parsed = JSON.parse(data);
+                            if (parsed.error) {
+                                contentEl.innerHTML += '<span style="color:var(--accent);">[' + escapeHtml(parsed.error) + ']</span>';
+                            } else if (parsed.content) {
+                                rawText += parsed.content;
+                                contentEl.innerHTML = escapeHtml(rawText);
                                 outputArea.scrollTop = outputArea.scrollHeight;
-                                continue;
                             }
-
-                            // Stage done
-                            if (stage === "1_done" || stage === "2_done" || stage === "3_done") {
-                                const badge = outputArea.querySelector('.stage-active:last-of-type');
-                                if (badge) {
-                                    badge.classList.remove('stage-active');
-                                    badge.classList.add('stage-done');
-                                    badge.textContent = badge.textContent.replace(/阶段 \d\/\d/, '✓ 完成');
-                                }
-                                continue;
-                            }
-
-                            if (stage === "all_done") {
-                                allDone = true;
-                                // Final render
-                                const allContent = outputArea.innerText || outputArea.textContent;
-                                outputArea.className = "output-area output-rendered";
-                                outputArea.innerHTML = renderMarkdownRaw(allContent);
-                            }
-                        } catch {}
+                        } catch(e) {}
                     }
                 }
 
-                if (allDone) {
-                    const elapsed = ((Date.now() - processingStartTime) / 1000).toFixed(0);
+                if (stageNum === 1) stage1Result = rawText;
+                if (stageNum === 2) stage2Result = rawText;
+
+                var badges = outputArea.querySelectorAll('.stage-active');
+                if (badges.length > 0) {
+                    var last = badges[badges.length - 1];
+                    last.classList.remove('stage-active');
+                    last.classList.add('stage-done');
+                    last.textContent = '\u2713 \u5b8c\u6210';
+                }
+
+                if (!doneReceived) {
+                    showStatus("\u9636\u6bb5 " + stageNum + " \u672a\u5b8c\u6574\u8fd4\u56de\uff0c\u53ef\u80fd\u8f93\u51fa\u8d85\u957f", "error");
+                    if (stageNum === 1) stage1Result = "";
+                    if (stageNum === 2) stage2Result = "";
+                    return;
+                }
+
+                if (stageNum === 3) {
+                    var elapsed = ((Date.now() - processingStartTime) / 1000).toFixed(0);
                     document.getElementById("statTime").textContent = elapsed + "s";
-                    showStatus(`三阶段处理完成，耗时 ${elapsed} 秒`, "success");
-                } else {
-                    showStatus("响应未完整返回", "error");
+                    showStatus("\u4e09\u9636\u6bb5\u5904\u7406\u5b8c\u6210\uff0c\u8017\u65f6 " + elapsed + " \u79d2", "success");
                 }
 
             } catch (err) {
-                if (err.name !== "AbortError") {
-                    outputArea.innerHTML += `<div class="stage-error">[请求失败：${escapeHtml(err.message)}]</div>`;
-                    showStatus(`请求失败：${err.message}`, "error");
-                }
-            } finally {
-                setLoading(false);
-                abortController = null;
+                if (err.name === "AbortError") return;
+                var ce = document.getElementById("stage" + stageNum + "-content");
+                if (ce) ce.innerHTML += '<span style="color:var(--accent);">[\u8bf7\u6c42\u5931\u8d25: ' + escapeHtml(err.message) + ']</span>';
+                showStatus("\u9636\u6bb5 " + stageNum + " \u5931\u8d25", "error");
+                if (stageNum === 1) stage1Result = "";
+                if (stageNum === 2) stage2Result = "";
             }
         }
 
-        function renderMarkdownRaw(text) {
-            let html = escapeHtml(text);
-            html = html.replace(/^## (.+)$/gm, '<h2>$1</h2>');
-            html = html.replace(/^### (.+)$/gm, '<h3>$1</h3>');
-            html = html.replace(/^#### (.+)$/gm, '<h4 style="color:var(--primary-light);margin:12px 0 4px;">$1</h4>');
-            html = html.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
-            html = html.replace(/^&gt; (.+)$/gm, '<blockquote>$1</blockquote>');
-            html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
-            html = html.replace(/^---+$/gm, '<hr style="border:none;border-top:1px solid var(--border);margin:16px 0;">');
-            html = html.replace(/^- (.+)$/gm, '<li style="margin-left:20px;">$1</li>');
-            html = html.replace(/^\d+\. (.+)$/gm, '<li style="margin-left:20px;">$1</li>');
-            return html;
+        function stopProcessing() {
+            if (abortController) { abortController.abort(); abortController = null; setLoading(false); showStatus("\u5904\u7406\u5df2\u505c\u6b62", "info"); }
         }
 
         function escapeHtml(str) {
-            const div = document.createElement("div");
+            var div = document.createElement("div");
             div.appendChild(document.createTextNode(str));
             return div.innerHTML;
         }
 
-        // Keyboard shortcut: Ctrl/Cmd + Enter to submit
-        document.addEventListener("keydown", (e) => {
+        document.addEventListener("keydown", function(e) {
             if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
                 e.preventDefault();
                 if (!btnProcess.disabled) startProcessing();
