@@ -51,12 +51,32 @@ def build_user_prompt(paper_text, paper_title=""):
 
 # ========== Anthropic 处理函数 ==========
 
+# 各模型最大输出 token 限制
+MODEL_MAX_OUTPUT = {
+    # Anthropic
+    "claude-opus-4-7": 32768,
+    "claude-sonnet-4-6": 16384,
+    "claude-haiku-4-5-20251001": 8192,
+    # DeepSeek
+    "deepseek-v4-pro": 32768,
+    "deepseek-v4-flash": 8192,
+    "deepseek-chat": 8192,
+}
+DEFAULT_MAX_TOKENS = 32000
+
+
+def get_max_tokens(model):
+    """根据模型获取合适的 max_tokens，留一些余量"""
+    return MODEL_MAX_OUTPUT.get(model, DEFAULT_MAX_TOKENS)
+
+
 def process_paper_anthropic_sync(paper_text, api_key, model, paper_title):
     """Anthropic API 同步处理"""
     client = anthropic.Anthropic(api_key=api_key)
+    max_tok = get_max_tokens(model)
     response = client.messages.create(
         model=model,
-        max_tokens=16000,
+        max_tokens=max_tok,
         system=SYSTEM_PROMPT,
         messages=[
             {"role": "user", "content": build_user_prompt(paper_text, paper_title)}
@@ -68,9 +88,10 @@ def process_paper_anthropic_sync(paper_text, api_key, model, paper_title):
 def process_paper_anthropic_stream(paper_text, api_key, model, paper_title):
     """Anthropic API 流式处理"""
     client = anthropic.Anthropic(api_key=api_key)
+    max_tok = get_max_tokens(model)
     with client.messages.stream(
         model=model,
-        max_tokens=16000,
+        max_tokens=max_tok,
         system=SYSTEM_PROMPT,
         messages=[
             {"role": "user", "content": build_user_prompt(paper_text, paper_title)}
@@ -85,10 +106,11 @@ def process_paper_anthropic_stream(paper_text, api_key, model, paper_title):
 def process_paper_deepseek_sync(paper_text, api_key, model, paper_title):
     """DeepSeek API 同步处理（OpenAI 兼容格式）"""
     client = OpenAI(api_key=api_key, base_url=DEEPSEEK_BASE_URL)
+    max_tok = get_max_tokens(model)
 
     response = client.chat.completions.create(
         model=model,
-        max_tokens=16000,
+        max_tokens=max_tok,
         temperature=0.7,
         messages=[
             {"role": "system", "content": SYSTEM_PROMPT},
@@ -101,10 +123,11 @@ def process_paper_deepseek_sync(paper_text, api_key, model, paper_title):
 def process_paper_deepseek_stream(paper_text, api_key, model, paper_title):
     """DeepSeek API 流式处理（OpenAI 兼容格式）"""
     client = OpenAI(api_key=api_key, base_url=DEEPSEEK_BASE_URL)
+    max_tok = get_max_tokens(model)
 
     stream = client.chat.completions.create(
         model=model,
-        max_tokens=16000,
+        max_tokens=max_tok,
         temperature=0.7,
         stream=True,
         messages=[
