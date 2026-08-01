@@ -289,7 +289,7 @@
                 <h1>《系统工程》实证论文重构系统</h1>
                 <div class="subtitle">System Engineering Empirical Paper Architect — 期刊适配诊断 · 结构重排 · 全文润色</div>
             </div>
-            <span class="badge">v1.0</span>
+            <span class="badge">v2.0 · Dual API</span>
         </div>
     </header>
 
@@ -312,19 +312,41 @@
                 </div>
 
                 {% if not has_admin_key %}
-                <div class="form-group">
-                    <label>Anthropic API Key</label>
-                    <div class="hint">用于调用 Claude API 处理论文。密钥仅本次会话使用，不存储。</div>
+                <div class="form-group" id="apiKeyGroup">
+                    <label id="apiKeyLabel">Anthropic API Key</label>
+                    <div class="hint" id="apiKeyHint">用于调用 Claude API 处理论文。密钥仅本次会话使用，不存储。</div>
                     <input type="password" id="apiKey" placeholder="sk-ant-...">
                 </div>
+                {% else %}
+                  {% if has_anthropic and not has_deepseek %}
+                <div class="note" style="margin-bottom: 12px; background: #e8f5ee; border-color: #c5e8d5; color: #1a5c3a;">
+                    Anthropic API Key 已由管理员配置，用户无需输入。
+                </div>
+                  {% elif has_deepseek and not has_anthropic %}
+                <div class="note" style="margin-bottom: 12px; background: #e8f5ee; border-color: #c5e8d5; color: #1a5c3a;">
+                    DeepSeek API Key 已由管理员配置，用户无需输入。
+                </div>
+                  {% else %}
+                <div class="note" style="margin-bottom: 12px; background: #e8f5ee; border-color: #c5e8d5; color: #1a5c3a;">
+                    API Key 已由管理员配置，用户无需输入。
+                </div>
+                  {% endif %}
                 {% endif %}
+
+                <div class="form-group">
+                    <label>API 平台</label>
+                    <select id="providerSelect" onchange="onProviderChange()">
+                        <option value="anthropic">Anthropic (Claude)</option>
+                        <option value="deepseek">DeepSeek</option>
+                    </select>
+                </div>
 
                 <div class="form-group">
                     <label>模型选择</label>
                     <select id="modelSelect">
-                        <option value="claude-sonnet-4-6">Claude Sonnet 4.6（推荐，性价比最优）</option>
-                        <option value="claude-opus-4-7">Claude Opus 4.7（最强，处理复杂论文）</option>
-                        <option value="claude-haiku-4-5-20251001">Claude Haiku 4.5（最快，初步诊断用）</option>
+                        <option value="claude-sonnet-4-6">Claude Sonnet 4.6（推荐）</option>
+                        <option value="claude-opus-4-7">Claude Opus 4.7（最强）</option>
+                        <option value="claude-haiku-4-5-20251001">Claude Haiku 4.5（最快）</option>
                     </select>
                 </div>
 
@@ -383,6 +405,43 @@
         const btnStop = document.getElementById("btnStop");
         const btnProcessText = document.getElementById("btnProcessText");
         const spinner = document.getElementById("spinner");
+        const providerSelect = document.getElementById("providerSelect");
+        const modelSelect = document.getElementById("modelSelect");
+        const apiKeyInput = document.getElementById("apiKey");
+        const apiKeyLabel = document.getElementById("apiKeyLabel");
+        const apiKeyHint = document.getElementById("apiKeyHint");
+
+        // 模型映射
+        const anthropicModels = [
+            { value: "claude-sonnet-4-6", label: "Claude Sonnet 4.6（推荐）" },
+            { value: "claude-opus-4-7", label: "Claude Opus 4.7（最强）" },
+            { value: "claude-haiku-4-5-20251001", label: "Claude Haiku 4.5（最快）" },
+        ];
+        const deepseekModels = [
+            { value: "deepseek-v4-pro", label: "DeepSeek V4 Pro（推荐，128K上下文）" },
+            { value: "deepseek-v4-flash", label: "DeepSeek V4 Flash（快速）" },
+            { value: "deepseek-chat", label: "DeepSeek Chat（通用）" },
+        ];
+
+        function onProviderChange() {
+            const provider = providerSelect.value;
+            const models = provider === "deepseek" ? deepseekModels : anthropicModels;
+            modelSelect.innerHTML = models.map(m =>
+                `<option value="${m.value}">${m.label}</option>`
+            ).join("");
+
+            if (apiKeyInput) {
+                if (provider === "deepseek") {
+                    apiKeyInput.placeholder = "sk-...";
+                    if (apiKeyLabel) apiKeyLabel.textContent = "DeepSeek API Key";
+                    if (apiKeyHint) apiKeyHint.textContent = "用于调用 DeepSeek API 处理论文。密钥仅本次会话使用，不存储。";
+                } else {
+                    apiKeyInput.placeholder = "sk-ant-...";
+                    if (apiKeyLabel) apiKeyLabel.textContent = "Anthropic API Key";
+                    if (apiKeyHint) apiKeyHint.textContent = "用于调用 Claude API 处理论文。密钥仅本次会话使用，不存储。";
+                }
+            }
+        }
 
         // 字数统计
         paperText.addEventListener("input", () => {
@@ -418,12 +477,28 @@
                 return;
             }
 
-            const useStream = document.getElementById("modelSelect").value !== "claude-haiku-4-5-20251001";
+            // Haiku 用同步模式（更快），其他用流式
+            const model = modelSelect.value;
+            const useStream = !model.includes("haiku");
             if (useStream) {
                 startStreamProcessing();
             } else {
                 startSyncProcessing();
             }
+        }
+
+        function getRequestPayload() {
+            const apiKey = apiKeyInput ? apiKeyInput.value.trim() : "";
+            const model = modelSelect.value;
+            const title = document.getElementById("paperTitle").value.trim();
+            const provider = providerSelect.value;
+            return {
+                paper_text: paperText.value,
+                paper_title: title,
+                api_key: apiKey,
+                model: model,
+                provider: provider
+            };
         }
 
         async function startSyncProcessing() {
@@ -435,19 +510,10 @@
             hideStatus();
 
             try {
-                const apiKey = document.getElementById("apiKey").value.trim();
-                const model = document.getElementById("modelSelect").value;
-                const title = document.getElementById("paperTitle").value.trim();
-
                 const response = await fetch("/api/process", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        paper_text: paperText.value,
-                        paper_title: title,
-                        api_key: apiKey,
-                        model: model
-                    }),
+                    body: JSON.stringify(getRequestPayload()),
                     signal: abortController.signal
                 });
 
@@ -457,7 +523,7 @@
                     renderMarkdownOutput(data.result);
                     const elapsed = ((Date.now() - processingStartTime) / 1000).toFixed(0);
                     document.getElementById("statTime").textContent = elapsed + "s";
-                    showStatus(`处理完成，耗时 ${elapsed} 秒`, "success");
+                    showStatus(`处理完成（${data.provider}/${data.model}），耗时 ${elapsed} 秒`, "success");
                 } else {
                     outputArea.className = "output-area empty";
                     outputArea.textContent = `错误：${data.error}`;
@@ -485,19 +551,10 @@
             showStatus("正在分析论文结构...", "info");
 
             try {
-                const apiKey = document.getElementById("apiKey").value.trim();
-                const model = document.getElementById("modelSelect").value;
-                const title = document.getElementById("paperTitle").value.trim();
-
                 const response = await fetch("/api/process/stream", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        paper_text: paperText.value,
-                        paper_title: title,
-                        api_key: apiKey,
-                        model: model
-                    }),
+                    body: JSON.stringify(getRequestPayload()),
                     signal: abortController.signal
                 });
 
@@ -525,14 +582,12 @@
                             try {
                                 const parsed = JSON.parse(data);
                                 if (parsed.error) {
-                                    outputArea.innerHTML += `<span style="color:var(--accent);">\n\n[错误] ${parsed.error}</span>`;
+                                    outputArea.innerHTML += `<span style="color:var(--accent);">\n\n[错误] ${escapeHtml(parsed.error)}</span>`;
                                 } else if (parsed.content) {
                                     fullText += parsed.content;
-                                    // Streaming render: show raw text with basic formatting during stream
                                     if (fullText.length < 500) {
                                         outputArea.innerHTML = escapeHtml(fullText);
                                     } else {
-                                        // Partial render for performance during stream
                                         outputArea.innerHTML = escapeHtml(fullText);
                                     }
                                     outputArea.scrollTop = outputArea.scrollHeight;
