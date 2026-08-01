@@ -280,6 +280,46 @@
         .output-rendered blockquote { border-left: 3px solid var(--accent); margin: 12px 0; padding: 6px 16px; background: #fdf8f6; color: #5a3a2a; }
         .output-rendered code { background: var(--code-bg); padding: 2px 6px; border-radius: 3px; font-size: 0.85rem; }
         .output-rendered pre { background: #1a1a2e; color: #e0e0e0; padding: 16px; border-radius: 6px; overflow-x: auto; margin: 12px 0; }
+
+        .stage-divider {
+            background: linear-gradient(135deg, #f0f4f8, #e8ecf2);
+            border: 1px solid var(--border);
+            border-left: 4px solid var(--primary);
+            padding: 12px 18px;
+            margin: 20px 0 12px;
+            border-radius: 4px;
+            font-weight: 700;
+            font-size: 1rem;
+            color: var(--primary);
+        }
+        .stage-badge {
+            display: inline-block;
+            padding: 3px 12px;
+            border-radius: 3px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            margin-right: 8px;
+        }
+        .stage-active {
+            background: var(--primary);
+            color: #fff;
+        }
+        .stage-done {
+            background: var(--success);
+            color: #fff;
+        }
+        .stage-content {
+            margin: 8px 0;
+        }
+        .stage-error {
+            background: #fde8e8;
+            color: #8b1a1a;
+            padding: 10px 14px;
+            border-radius: 4px;
+            border: 1px solid #f5c5c5;
+            margin: 8px 0;
+        }
     </style>
 </head>
 <body>
@@ -511,15 +551,8 @@
                 showStatus("论文内容过短（至少500字），请检查后重新提交", "error");
                 return;
             }
-
-            // DeepSeek 和 Sonnet/Opus 用流式，Haiku 用同步
-            const model = modelSelect.value;
-            const useStream = !model.includes("haiku");
-            if (useStream) {
-                startStreamProcessing();
-            } else {
-                startSyncProcessing();
-            }
+            // 统一使用三阶段分步处理，避免输出截断
+            startStreamProcessing();
         }
 
         function getRequestPayload() {
@@ -594,46 +627,6 @@
             };
         }
 
-        async function startSyncProcessing() {
-            abortController = new AbortController();
-            setLoading(true);
-            outputArea.className = "output-area";
-            outputArea.innerHTML = "";
-            processingStartTime = Date.now();
-            hideStatus();
-
-            try {
-                const response = await fetch("/api/process", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(getRequestPayload()),
-                    signal: abortController.signal
-                });
-
-                const data = await response.json();
-
-                if (data.success) {
-                    renderMarkdownOutput(data.result);
-                    const elapsed = ((Date.now() - processingStartTime) / 1000).toFixed(0);
-                    document.getElementById("statTime").textContent = elapsed + "s";
-                    showStatus(`处理完成（${data.provider}/${data.model}），耗时 ${elapsed} 秒`, "success");
-                } else {
-                    outputArea.className = "output-area empty";
-                    outputArea.textContent = `错误：${data.error}`;
-                    showStatus(data.error, "error");
-                }
-            } catch (err) {
-                if (err.name !== "AbortError") {
-                    outputArea.className = "output-area empty";
-                    outputArea.textContent = `请求失败：${err.message}`;
-                    showStatus(`请求失败：${err.message}`, "error");
-                }
-            } finally {
-                setLoading(false);
-                abortController = null;
-            }
-        }
-
         async function startStreamProcessing() {
             abortController = new AbortController();
             setLoading(true);
@@ -641,10 +634,19 @@
             outputArea.innerHTML = "";
             processingStartTime = Date.now();
             hideStatus();
-            showStatus("正在分析论文结构...", "info");
+
+            const stageLabels = {
+                "1_start": '<div class="stage-divider"><span class="stage-badge stage-active">阶段 1/3</span> 期刊适配诊断 + 建议全文结构</div>',
+                "2_start": '<div class="stage-divider"><span class="stage-badge stage-active">阶段 2/3</span> 完整修改稿</div>',
+                "3_start": '<div class="stage-divider"><span class="stage-badge stage-active">阶段 3/3</span> 修改说明 + 风险清单与质量评分</div>',
+                "1_done": '',
+                "2_done": '',
+                "3_done": '',
+                "all_done": '',
+            };
 
             try {
-                const response = await fetch("/api/process/stream", {
+                const response = await fetch("/api/process/staged", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(getRequestPayload()),
@@ -655,7 +657,8 @@
                 const decoder = new TextDecoder();
                 let buffer = "";
                 let fullText = "";
-                let doneReceived = false;
+                let currentStage = "";
+                let allDone = false;
 
                 while (true) {
                     const { done, value } = await reader.read();
@@ -666,42 +669,81 @@
                     buffer = lines.pop() || "";
 
                     for (const line of lines) {
-                        if (line.startsWith("data: ")) {
-                            const data = line.slice(6).trim();
-                            if (data === "[DONE]") {
-                                doneReceived = true;
+                        if (!line.startsWith("data: ")) continue;
+                        const data = line.slice(6).trim();
+                        if (!data) continue;
+
+                        try {
+                            const parsed = JSON.parse(data);
+                            const stage = parsed.stage;
+
+                            if (stage === "error") {
+                                outputArea.innerHTML += `<div class="stage-error">[错误] ${escapeHtml(parsed.error)}</div>`;
                                 continue;
                             }
-                            try {
-                                const parsed = JSON.parse(data);
-                                if (parsed.error) {
-                                    outputArea.innerHTML += `<span style="color:var(--accent);">\n\n[错误] ${escapeHtml(parsed.error)}</span>`;
-                                } else if (parsed.content) {
-                                    fullText += parsed.content;
-                                    if (fullText.length < 500) {
-                                        outputArea.innerHTML = escapeHtml(fullText);
-                                    } else {
-                                        outputArea.innerHTML = escapeHtml(fullText);
+
+                            // Stage start markers
+                            if (stage === "1_start" || stage === "2_start" || stage === "3_start") {
+                                if (currentStage !== stage) {
+                                    // Mark previous stage as done
+                                    if (currentStage && currentStage !== stage) {
+                                        const prevBadge = outputArea.querySelector('.stage-active:last-of-type');
+                                        if (prevBadge) prevBadge.classList.add('stage-done');
                                     }
-                                    outputArea.scrollTop = outputArea.scrollHeight;
+                                    currentStage = stage;
+                                    outputArea.innerHTML += stageLabels[stage];
+                                    showStatus(parsed.label || `正在处理阶段 ${stage[0]}...`, "info");
                                 }
-                            } catch {}
-                        }
+                                continue;
+                            }
+
+                            // Stage content
+                            if (stage === "1" || stage === "2" || stage === "3") {
+                                fullText += parsed.content;
+                                // Show streaming content in its own block
+                                let stageEl = document.getElementById(`stage-${stage}`);
+                                if (!stageEl) {
+                                    outputArea.innerHTML += `<div id="stage-${stage}" class="stage-content"></div>`;
+                                    stageEl = document.getElementById(`stage-${stage}`);
+                                }
+                                stageEl.innerHTML = escapeHtml(stageEl.textContent + parsed.content);
+                                outputArea.scrollTop = outputArea.scrollHeight;
+                                continue;
+                            }
+
+                            // Stage done
+                            if (stage === "1_done" || stage === "2_done" || stage === "3_done") {
+                                const badge = outputArea.querySelector('.stage-active:last-of-type');
+                                if (badge) {
+                                    badge.classList.remove('stage-active');
+                                    badge.classList.add('stage-done');
+                                    badge.textContent = badge.textContent.replace(/阶段 \d\/\d/, '✓ 完成');
+                                }
+                                continue;
+                            }
+
+                            if (stage === "all_done") {
+                                allDone = true;
+                                // Final render
+                                const allContent = outputArea.innerText || outputArea.textContent;
+                                outputArea.className = "output-area output-rendered";
+                                outputArea.innerHTML = renderMarkdownRaw(allContent);
+                            }
+                        } catch {}
                     }
                 }
 
-                if (fullText) {
-                    renderMarkdownOutput(fullText);
+                if (allDone) {
                     const elapsed = ((Date.now() - processingStartTime) / 1000).toFixed(0);
                     document.getElementById("statTime").textContent = elapsed + "s";
-                    showStatus(`处理完成，耗时 ${elapsed} 秒`, "success");
-                } else if (!doneReceived) {
-                    showStatus("未收到完整响应", "error");
+                    showStatus(`三阶段处理完成，耗时 ${elapsed} 秒`, "success");
+                } else {
+                    showStatus("响应未完整返回", "error");
                 }
 
             } catch (err) {
                 if (err.name !== "AbortError") {
-                    outputArea.innerHTML += `\n\n<span style="color:var(--accent);">[请求失败：${escapeHtml(err.message)}]</span>`;
+                    outputArea.innerHTML += `<div class="stage-error">[请求失败：${escapeHtml(err.message)}]</div>`;
                     showStatus(`请求失败：${err.message}`, "error");
                 }
             } finally {
@@ -710,42 +752,18 @@
             }
         }
 
-        function stopProcessing() {
-            if (abortController) {
-                abortController.abort();
-                abortController = null;
-                setLoading(false);
-                showStatus("处理已停止", "info");
-            }
-        }
-
-        // Simple markdown-like rendering
-        function renderMarkdownOutput(text) {
+        function renderMarkdownRaw(text) {
             let html = escapeHtml(text);
-
-            // Headers
             html = html.replace(/^## (.+)$/gm, '<h2>$1</h2>');
             html = html.replace(/^### (.+)$/gm, '<h3>$1</h3>');
             html = html.replace(/^#### (.+)$/gm, '<h4 style="color:var(--primary-light);margin:12px 0 4px;">$1</h4>');
-
-            // Bold
             html = html.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
-
-            // Blockquote
             html = html.replace(/^&gt; (.+)$/gm, '<blockquote>$1</blockquote>');
-
-            // Inline code
             html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
-
-            // Horizontal rules
             html = html.replace(/^---+$/gm, '<hr style="border:none;border-top:1px solid var(--border);margin:16px 0;">');
-
-            // Lists
             html = html.replace(/^- (.+)$/gm, '<li style="margin-left:20px;">$1</li>');
             html = html.replace(/^\d+\. (.+)$/gm, '<li style="margin-left:20px;">$1</li>');
-
-            outputArea.className = "output-area output-rendered";
-            outputArea.innerHTML = html;
+            return html;
         }
 
         function escapeHtml(str) {

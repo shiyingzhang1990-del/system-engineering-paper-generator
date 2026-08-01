@@ -6,151 +6,117 @@ from flask_cors import CORS
 import anthropic
 from openai import OpenAI
 
-from system_prompt import SYSTEM_PROMPT
+from system_prompt import STAGE1_PROMPT, STAGE2_PROMPT, STAGE3_PROMPT
 
 app = Flask(__name__)
 CORS(app)
 app.secret_key = os.environ.get("SECRET_KEY", "system-engineering-paper-generator-2024")
 
-# 管理员预设 API Keys（环境变量）
 ADMIN_ANTHROPIC_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
 ADMIN_DEEPSEEK_KEY = os.environ.get("DEEPSEEK_API_KEY", "")
 
-# DeepSeek API 配置
 DEEPSEEK_BASE_URL = "https://api.deepseek.com"
-DEEPSEEK_DEFAULT_MODEL = "deepseek-v4-pro"
 
-# Anthropic 默认模型
-ANTHROPIC_DEFAULT_MODEL = "claude-sonnet-4-6"
-
-# 模型列表
 ANTHROPIC_MODELS = {
     "claude-opus-4-7": "Claude Opus 4.7（最强）",
     "claude-sonnet-4-6": "Claude Sonnet 4.6（推荐）",
     "claude-haiku-4-5-20251001": "Claude Haiku 4.5（最快）",
 }
-
 DEEPSEEK_MODELS = {
     "deepseek-v4-pro": "DeepSeek V4 Pro（推荐，128K上下文）",
     "deepseek-v4-flash": "DeepSeek V4 Flash（快速）",
     "deepseek-chat": "DeepSeek Chat（通用）",
 }
 
-
-def build_user_prompt(paper_text, paper_title=""):
-    """构建用户提示词"""
-    return f"""请处理以下论文。严格按照系统指令输出五部分内容。
-
-论文标题：{paper_title or "（未提供）"}
-
-论文全文：
----
-{paper_text}
----"""
-
-
-# ========== Anthropic 处理函数 ==========
-
-# 各模型最大输出 token 限制
 MODEL_MAX_OUTPUT = {
-    # Anthropic
     "claude-opus-4-7": 32768,
     "claude-sonnet-4-6": 16384,
     "claude-haiku-4-5-20251001": 8192,
-    # DeepSeek
     "deepseek-v4-pro": 32768,
     "deepseek-v4-flash": 8192,
     "deepseek-chat": 8192,
 }
-DEFAULT_MAX_TOKENS = 32000
 
 
-def get_max_tokens(model):
-    """根据模型获取合适的 max_tokens，留一些余量"""
-    return MODEL_MAX_OUTPUT.get(model, DEFAULT_MAX_TOKENS)
+def get_client(provider, api_key):
+    """获取 API 客户端"""
+    if provider == "deepseek":
+        return OpenAI(api_key=api_key, base_url=DEEPSEEK_BASE_URL)
+    else:
+        return anthropic.Anthropic(api_key=api_key)
 
 
-def process_paper_anthropic_sync(paper_text, api_key, model, paper_title):
-    """Anthropic API 同步处理"""
-    client = anthropic.Anthropic(api_key=api_key)
-    max_tok = get_max_tokens(model)
-    response = client.messages.create(
-        model=model,
-        max_tokens=max_tok,
-        system=SYSTEM_PROMPT,
-        messages=[
-            {"role": "user", "content": build_user_prompt(paper_text, paper_title)}
-        ]
-    )
-    return response.content[0].text
+def call_llm(provider, client, system_prompt, user_message, model, max_tokens):
+    """统一的 LLM 调用（非流式）"""
+    if provider == "deepseek":
+        response = client.chat.completions.create(
+            model=model,
+            max_tokens=max_tokens,
+            temperature=0.7,
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_message}
+            ]
+        )
+        return response.choices[0].message.content
+    else:
+        response = client.messages.create(
+            model=model,
+            max_tokens=max_tokens,
+            system=system_prompt,
+            messages=[{"role": "user", "content": user_message}]
+        )
+        return response.content[0].text
 
 
-def process_paper_anthropic_stream(paper_text, api_key, model, paper_title):
-    """Anthropic API 流式处理"""
-    client = anthropic.Anthropic(api_key=api_key)
-    max_tok = get_max_tokens(model)
-    with client.messages.stream(
-        model=model,
-        max_tokens=max_tok,
-        system=SYSTEM_PROMPT,
-        messages=[
-            {"role": "user", "content": build_user_prompt(paper_text, paper_title)}
-        ]
-    ) as stream:
-        for text in stream.text_stream:
-            yield text
+def call_llm_stream(provider, client, system_prompt, user_message, model, max_tokens):
+    """统一的 LLM 调用（流式）"""
+    if provider == "deepseek":
+        stream = client.chat.completions.create(
+            model=model,
+            max_tokens=max_tokens,
+            temperature=0.7,
+            stream=True,
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_message}
+            ]
+        )
+        for chunk in stream:
+            if chunk.choices[0].delta.content:
+                yield chunk.choices[0].delta.content
+    else:
+        with client.messages.stream(
+            model=model,
+            max_tokens=max_tokens,
+            system=system_prompt,
+            messages=[{"role": "user", "content": user_message}]
+        ) as stream:
+            for text in stream.text_stream:
+                yield text
 
 
-# ========== DeepSeek 处理函数 ==========
-
-def process_paper_deepseek_sync(paper_text, api_key, model, paper_title):
-    """DeepSeek API 同步处理（OpenAI 兼容格式）"""
-    client = OpenAI(api_key=api_key, base_url=DEEPSEEK_BASE_URL)
-    max_tok = get_max_tokens(model)
-
-    response = client.chat.completions.create(
-        model=model,
-        max_tokens=max_tok,
-        temperature=0.7,
-        messages=[
-            {"role": "system", "content": SYSTEM_PROMPT},
-            {"role": "user", "content": build_user_prompt(paper_text, paper_title)}
-        ]
-    )
-    return response.choices[0].message.content
-
-
-def process_paper_deepseek_stream(paper_text, api_key, model, paper_title):
-    """DeepSeek API 流式处理（OpenAI 兼容格式）"""
-    client = OpenAI(api_key=api_key, base_url=DEEPSEEK_BASE_URL)
-    max_tok = get_max_tokens(model)
-
-    stream = client.chat.completions.create(
-        model=model,
-        max_tokens=max_tok,
-        temperature=0.7,
-        stream=True,
-        messages=[
-            {"role": "system", "content": SYSTEM_PROMPT},
-            {"role": "user", "content": build_user_prompt(paper_text, paper_title)}
-        ]
-    )
-    for chunk in stream:
-        if chunk.choices[0].delta.content:
-            yield chunk.choices[0].delta.content
+def get_api_key_and_model(data):
+    """从请求中提取 API key 和 model"""
+    provider = data.get("provider", "anthropic")
+    if provider == "deepseek":
+        api_key = data.get("api_key", "").strip() or ADMIN_DEEPSEEK_KEY
+        model = data.get("model", "") or "deepseek-v4-pro"
+    else:
+        api_key = data.get("api_key", "").strip() or ADMIN_ANTHROPIC_KEY
+        model = data.get("model", "") or "claude-sonnet-4-6"
+    return provider, api_key, model
 
 
 # ========== 路由 ==========
 
 @app.route("/")
 def index():
-    """主页"""
     has_anthropic = bool(ADMIN_ANTHROPIC_KEY)
     has_deepseek = bool(ADMIN_DEEPSEEK_KEY)
-    has_admin_key = has_anthropic or has_deepseek
     return render_template(
         "index.html",
-        has_admin_key=has_admin_key,
+        has_admin_key=has_anthropic or has_deepseek,
         has_anthropic=has_anthropic,
         has_deepseek=has_deepseek,
         anthropic_models=ANTHROPIC_MODELS,
@@ -158,99 +124,78 @@ def index():
     )
 
 
-@app.route("/api/process", methods=["POST"])
-def process():
-    """处理论文（非流式，支持双 API）"""
-    try:
-        data = request.get_json()
-        paper_text = data.get("paper_text", "").strip()
-        paper_title = data.get("paper_title", "").strip()
-        provider = data.get("provider", "anthropic")  # "anthropic" 或 "deepseek"
-        model = data.get("model", "")
-
-        # 获取 API Key
-        if provider == "deepseek":
-            api_key = data.get("api_key", "").strip() or ADMIN_DEEPSEEK_KEY
-            if not model:
-                model = DEEPSEEK_DEFAULT_MODEL
-        else:
-            api_key = data.get("api_key", "").strip() or ADMIN_ANTHROPIC_KEY
-            if not model:
-                model = ANTHROPIC_DEFAULT_MODEL
-
-        if not paper_text:
-            return jsonify({"error": "请输入论文内容"}), 400
-        if len(paper_text) < 500:
-            return jsonify({"error": "论文内容过短（至少500字），请检查后重新提交"}), 400
-        if not api_key:
-            provider_name = "DeepSeek" if provider == "deepseek" else "Anthropic"
-            return jsonify({"error": f"请提供 {provider_name} API Key"}), 400
-
-        # 按 provider 分发
-        if provider == "deepseek":
-            result = process_paper_deepseek_sync(paper_text, api_key, model, paper_title)
-        else:
-            result = process_paper_anthropic_sync(paper_text, api_key, model, paper_title)
-
-        return jsonify({
-            "success": True,
-            "result": result,
-            "provider": provider,
-            "model": model,
-            "timestamp": datetime.now().isoformat()
-        })
-
-    except Exception as e:
-        error_msg = str(e)
-        # 简化常见错误信息
-        if "401" in error_msg or "Unauthorized" in error_msg:
-            error_msg = "API Key 无效，请检查后重试"
-        elif "429" in error_msg or "rate" in error_msg.lower():
-            error_msg = "API 调用频率超限，请稍后重试"
-        elif "timeout" in error_msg.lower():
-            error_msg = "请求超时，论文过长或网络不稳定"
-        return jsonify({"error": f"处理失败: {error_msg}"}), 500
-
-
-@app.route("/api/process/stream", methods=["POST"])
-def process_stream():
-    """处理论文（流式，支持双 API）"""
+@app.route("/api/process/staged", methods=["POST"])
+def process_staged():
+    """三阶段分步处理论文（流式），每阶段独立 API 调用避免输出截断"""
     data = request.get_json()
     paper_text = data.get("paper_text", "").strip()
     paper_title = data.get("paper_title", "").strip()
-    provider = data.get("provider", "anthropic")
-    model = data.get("model", "")
-
-    if provider == "deepseek":
-        api_key = data.get("api_key", "").strip() or ADMIN_DEEPSEEK_KEY
-        if not model:
-            model = DEEPSEEK_DEFAULT_MODEL
-    else:
-        api_key = data.get("api_key", "").strip() or ADMIN_ANTHROPIC_KEY
-        if not model:
-            model = ANTHROPIC_DEFAULT_MODEL
+    provider, api_key, model = get_api_key_and_model(data)
 
     if not paper_text:
         return jsonify({"error": "请输入论文内容"}), 400
     if len(paper_text) < 500:
-        return jsonify({"error": "论文内容过短（至少500字）"}), 400
+        return jsonify({"error": "论文内容过短"}), 400
     if not api_key:
-        provider_name = "DeepSeek" if provider == "deepseek" else "Anthropic"
-        return jsonify({"error": f"请提供 {provider_name} API Key"}), 400
+        return jsonify({"error": "请提供 API Key"}), 400
+
+    max_tok = MODEL_MAX_OUTPUT.get(model, 16384)
 
     def generate():
-        try:
-            if provider == "deepseek":
-                stream = process_paper_deepseek_stream(paper_text, api_key, model, paper_title)
-            else:
-                stream = process_paper_anthropic_stream(paper_text, api_key, model, paper_title)
+        client = get_client(provider, api_key)
+        stage1_output = ""
+        stage2_output = ""
 
-            for chunk in stream:
-                yield f"data: {json.dumps({'content': chunk}, ensure_ascii=False)}\n\n"
-            yield "data: [DONE]\n\n"
+        try:
+            # ===== 阶段1：期刊适配诊断 + 建议全文结构 =====
+            yield f"data: {json.dumps({'stage': '1_start', 'label': '阶段1/3：正在诊断期刊适配性与系统结构...'}, ensure_ascii=False)}\n\n"
+
+            user_msg = f"论文标题：{paper_title or '（未提供）'}\n\n论文全文：\n---\n{paper_text}\n---"
+            s1_buffer = ""
+            for chunk in call_llm_stream(provider, client, STAGE1_PROMPT, user_msg, model, max_tok):
+                s1_buffer += chunk
+                yield f"data: {json.dumps({'stage': '1', 'content': chunk}, ensure_ascii=False)}\n\n"
+
+            stage1_output = s1_buffer
+            yield f"data: {json.dumps({'stage': '1_done'}, ensure_ascii=False)}\n\n"
+
+            # ===== 阶段2：完整修改稿 =====
+            yield f"data: {json.dumps({'stage': '2_start', 'label': '阶段2/3：正在重构全文...'}, ensure_ascii=False)}\n\n"
+
+            s2_prompt = STAGE2_PROMPT.format(
+                stage1_output=stage1_output[:6000],  # 截断上下文避免过长
+                paper_text=paper_text
+            )
+            s2_buffer = ""
+            for chunk in call_llm_stream(provider, client, s2_prompt, "请输出完整修改稿全文。", model, max_tok):
+                s2_buffer += chunk
+                yield f"data: {json.dumps({'stage': '2', 'content': chunk}, ensure_ascii=False)}\n\n"
+
+            stage2_output = s2_buffer
+            yield f"data: {json.dumps({'stage': '2_done'}, ensure_ascii=False)}\n\n"
+
+            # ===== 阶段3：修改说明 + 风险清单与质量评分 =====
+            yield f"data: {json.dumps({'stage': '3_start', 'label': '阶段3/3：正在审核修改稿并评分...'}, ensure_ascii=False)}\n\n"
+
+            s3_prompt = STAGE3_PROMPT.format(
+                stage1_output=stage1_output[:4000],
+                stage2_output=stage2_output[:8000]
+            )
+            for chunk in call_llm_stream(provider, client, s3_prompt, "请输出修改说明、风险清单和质量评分。", model, max_tok):
+                yield f"data: {json.dumps({'stage': '3', 'content': chunk}, ensure_ascii=False)}\n\n"
+
+            yield f"data: {json.dumps({'stage': '3_done'}, ensure_ascii=False)}\n\n"
+            yield f"data: {json.dumps({'stage': 'all_done'}, ensure_ascii=False)}\n\n"
+
         except Exception as e:
             error_msg = str(e)
-            yield f"data: {json.dumps({'error': error_msg}, ensure_ascii=False)}\n\n"
+            if "401" in error_msg or "Unauthorized" in error_msg:
+                error_msg = "API Key 无效"
+            elif "429" in error_msg:
+                error_msg = "API 调用频率超限，请稍后重试"
+            elif "timeout" in error_msg.lower():
+                error_msg = "请求超时"
+            yield f"data: {json.dumps({'stage': 'error', 'error': error_msg}, ensure_ascii=False)}\n\n"
 
     return Response(
         stream_with_context(generate()),
@@ -263,22 +208,12 @@ def process_stream():
     )
 
 
-@app.route("/api/models", methods=["GET"])
-def get_models():
-    """返回可用模型列表"""
-    return jsonify({
-        "anthropic": ANTHROPIC_MODELS,
-        "deepseek": DEEPSEEK_MODELS,
-    })
-
-
 @app.route("/api/health", methods=["GET"])
 def health():
-    """健康检查"""
     return jsonify({
         "status": "ok",
         "timestamp": datetime.now().isoformat(),
-        "version": "2.0.0",
+        "version": "3.0.0-staged",
         "providers": ["anthropic", "deepseek"]
     })
 
