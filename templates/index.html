@@ -313,27 +313,20 @@
 
                 {% if not has_admin_key %}
                 <div class="form-group" id="apiKeyGroup">
-                    <label id="apiKeyLabel">Anthropic API Key</label>
-                    <div class="hint" id="apiKeyHint">用于调用 Claude API 处理论文。密钥仅本次会话使用，不存储。</div>
-                    <input type="password" id="apiKey" placeholder="sk-ant-...">
+                    <label>API Key</label>
+                    <div class="hint">
+                        支持 Anthropic（<code>sk-ant-...</code>）和 DeepSeek（<code>sk-...</code>），系统自动识别密钥类型
+                    </div>
+                    <input type="password" id="apiKey" placeholder="sk-ant-... 或 sk-..." oninput="onApiKeyInput()">
+                    <div id="apiKeyDetect" style="font-size:0.78rem;margin-top:4px;color:var(--text-light);"></div>
                 </div>
                 {% else %}
-                  {% if has_anthropic and not has_deepseek %}
-                <div class="note" style="margin-bottom: 12px; background: #e8f5ee; border-color: #c5e8d5; color: #1a5c3a;">
-                    Anthropic API Key 已由管理员配置，用户无需输入。
-                </div>
-                  {% elif has_deepseek and not has_anthropic %}
-                <div class="note" style="margin-bottom: 12px; background: #e8f5ee; border-color: #c5e8d5; color: #1a5c3a;">
-                    DeepSeek API Key 已由管理员配置，用户无需输入。
-                </div>
-                  {% else %}
                 <div class="note" style="margin-bottom: 12px; background: #e8f5ee; border-color: #c5e8d5; color: #1a5c3a;">
                     API Key 已由管理员配置，用户无需输入。
                 </div>
-                  {% endif %}
                 {% endif %}
 
-                <div class="form-group">
+                <div class="form-group" id="providerGroup" style="display:none;">
                     <label>API 平台</label>
                     <select id="providerSelect" onchange="onProviderChange()">
                         <option value="anthropic">Anthropic (Claude)</option>
@@ -344,9 +337,16 @@
                 <div class="form-group">
                     <label>模型选择</label>
                     <select id="modelSelect">
-                        <option value="claude-sonnet-4-6">Claude Sonnet 4.6（推荐）</option>
-                        <option value="claude-opus-4-7">Claude Opus 4.7（最强）</option>
-                        <option value="claude-haiku-4-5-20251001">Claude Haiku 4.5（最快）</option>
+                        <optgroup label="Anthropic Claude">
+                            <option value="claude-sonnet-4-6">Claude Sonnet 4.6（推荐）</option>
+                            <option value="claude-opus-4-7">Claude Opus 4.7（最强）</option>
+                            <option value="claude-haiku-4-5-20251001">Claude Haiku 4.5（最快）</option>
+                        </optgroup>
+                        <optgroup label="DeepSeek">
+                            <option value="deepseek-v4-pro">DeepSeek V4 Pro（推荐，128K）</option>
+                            <option value="deepseek-v4-flash">DeepSeek V4 Flash（快速）</option>
+                            <option value="deepseek-chat">DeepSeek Chat（通用）</option>
+                        </optgroup>
                     </select>
                 </div>
 
@@ -397,6 +397,7 @@
     <script>
         let abortController = null;
         let processingStartTime = null;
+        let currentProvider = "anthropic";  // 当前识别的平台
 
         const paperText = document.getElementById("paperText");
         const outputArea = document.getElementById("outputArea");
@@ -408,8 +409,7 @@
         const providerSelect = document.getElementById("providerSelect");
         const modelSelect = document.getElementById("modelSelect");
         const apiKeyInput = document.getElementById("apiKey");
-        const apiKeyLabel = document.getElementById("apiKeyLabel");
-        const apiKeyHint = document.getElementById("apiKeyHint");
+        const apiKeyDetect = document.getElementById("apiKeyDetect");
 
         // 模型映射
         const anthropicModels = [
@@ -418,29 +418,122 @@
             { value: "claude-haiku-4-5-20251001", label: "Claude Haiku 4.5（最快）" },
         ];
         const deepseekModels = [
-            { value: "deepseek-v4-pro", label: "DeepSeek V4 Pro（推荐，128K上下文）" },
+            { value: "deepseek-v4-pro", label: "DeepSeek V4 Pro（推荐，128K）" },
             { value: "deepseek-v4-flash", label: "DeepSeek V4 Flash（快速）" },
             { value: "deepseek-chat", label: "DeepSeek Chat（通用）" },
         ];
 
-        function onProviderChange() {
-            const provider = providerSelect.value;
+        function updateModelSelect(provider) {
             const models = provider === "deepseek" ? deepseekModels : anthropicModels;
-            modelSelect.innerHTML = models.map(m =>
-                `<option value="${m.value}">${m.label}</option>`
-            ).join("");
+            const otherModels = provider === "deepseek" ? anthropicModels : deepseekModels;
+            const otherLabel = provider === "deepseek" ? "Anthropic Claude" : "DeepSeek";
 
-            if (apiKeyInput) {
-                if (provider === "deepseek") {
-                    apiKeyInput.placeholder = "sk-...";
-                    if (apiKeyLabel) apiKeyLabel.textContent = "DeepSeek API Key";
-                    if (apiKeyHint) apiKeyHint.textContent = "用于调用 DeepSeek API 处理论文。密钥仅本次会话使用，不存储。";
-                } else {
-                    apiKeyInput.placeholder = "sk-ant-...";
-                    if (apiKeyLabel) apiKeyLabel.textContent = "Anthropic API Key";
-                    if (apiKeyHint) apiKeyHint.textContent = "用于调用 Claude API 处理论文。密钥仅本次会话使用，不存储。";
-                }
+            modelSelect.innerHTML =
+                `<optgroup label="${provider === 'deepseek' ? 'DeepSeek' : 'Anthropic Claude'}">` +
+                models.map(m => `<option value="${m.value}">${m.label}</option>`).join("") +
+                `</optgroup>` +
+                `<optgroup label="${otherLabel}" disabled>` +
+                otherModels.map(m => `<option value="${m.value}">${m.label}</option>`).join("") +
+                `</optgroup>`;
+
+            // 自动选第一个模型
+            modelSelect.value = models[0].value;
+        }
+
+        function detectProviderFromKey(key) {
+            if (!key || key.length < 5) return null;
+            if (key.startsWith("sk-ant-")) return "anthropic";
+            if (key.startsWith("sk-")) return "deepseek";
+            return null;
+        }
+
+        function onApiKeyInput() {
+            const key = apiKeyInput ? apiKeyInput.value.trim() : "";
+            const detected = detectProviderFromKey(key);
+
+            if (!key) {
+                if (apiKeyDetect) apiKeyDetect.innerHTML = "";
+                currentProvider = providerSelect.value;
+                updateModelSelect(currentProvider);
+                return;
             }
+
+            if (detected === "anthropic") {
+                if (apiKeyDetect) apiKeyDetect.innerHTML = '<span style="color:#2d8a56;">✓ 识别为 <strong>Anthropic</strong> 密钥，将调用 Claude 模型</span>';
+                currentProvider = "anthropic";
+                providerSelect.value = "anthropic";
+                updateModelSelect("anthropic");
+            } else if (detected === "deepseek") {
+                if (apiKeyDetect) apiKeyDetect.innerHTML = '<span style="color:#2d8a56;">✓ 识别为 <strong>DeepSeek</strong> 密钥，将调用 DeepSeek 模型</span>';
+                currentProvider = "deepseek";
+                providerSelect.value = "deepseek";
+                updateModelSelect("deepseek");
+            } else {
+                if (apiKeyDetect) apiKeyDetect.innerHTML = '<span style="color:#b8860b;">⚠ 未识别，请输入有效的 API Key（<code>sk-ant-...</code> 或 <code>sk-...</code>）</span>';
+            }
+        }
+
+        function onProviderChange() {
+            currentProvider = providerSelect.value;
+            updateModelSelect(currentProvider);
+        }
+
+        // 字数统计
+        paperText.addEventListener("input", () => {
+            const len = paperText.value.length;
+            document.getElementById("wordCount").textContent = `字数：${len}`;
+            document.getElementById("statChars").textContent = len > 0 ? len.toLocaleString() : "--";
+        });
+
+        function showStatus(msg, type) {
+            statusBar.textContent = msg;
+            statusBar.className = `status-bar ${type} show`;
+        }
+
+        function hideStatus() {
+            statusBar.className = "status-bar";
+        }
+
+        function setLoading(loading) {
+            btnProcess.disabled = loading;
+            spinner.style.display = loading ? "inline-block" : "none";
+            btnProcessText.textContent = loading ? "处理中..." : "开始诊断与重构";
+            btnStop.style.display = loading ? "inline-flex" : "none";
+        }
+
+        function startProcessing() {
+            const text = paperText.value.trim();
+            if (!text) {
+                showStatus("请先粘贴论文内容", "error");
+                return;
+            }
+            if (text.length < 500) {
+                showStatus("论文内容过短（至少500字），请检查后重新提交", "error");
+                return;
+            }
+
+            // DeepSeek 和 Sonnet/Opus 用流式，Haiku 用同步
+            const model = modelSelect.value;
+            const useStream = !model.includes("haiku");
+            if (useStream) {
+                startStreamProcessing();
+            } else {
+                startSyncProcessing();
+            }
+        }
+
+        function getRequestPayload() {
+            const apiKey = apiKeyInput ? apiKeyInput.value.trim() : "";
+            const model = modelSelect.value;
+            const title = document.getElementById("paperTitle").value.trim();
+            const provider = currentProvider;
+            return {
+                paper_text: paperText.value,
+                paper_title: title,
+                api_key: apiKey,
+                model: model,
+                provider: provider
+            };
         }
 
         // 字数统计
