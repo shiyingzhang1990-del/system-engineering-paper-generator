@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: system-engineering-paper-generator
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app -b 0.0.0.0:$PORT
+    plan: standard
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.0

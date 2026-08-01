@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>《系统工程》实证论文重构系统</title>
+    <style>
+        :root {
+            --primary: #1a3a5c;
+            --primary-light: #2c5f8a;
+            --accent: #c43e2c;
+            --bg: #f5f0eb;
+            --card-bg: #ffffff;
+            --text: #2c2c2c;
+            --text-light: #666;
+            --border: #e0d8cf;
+            --success: #2d8a56;
+            --warning: #b8860b;
+            --code-bg: #faf8f5;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: "Noto Serif SC", "Source Han Serif SC", "Songti SC", "SimSun", "STSong", serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.7;
+            min-height: 100vh;
+        }
+
+        .header {
+            background: var(--primary);
+            color: #fff;
+            padding: 20px 0;
+            border-bottom: 3px solid var(--accent);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+        }
+
+        .header-inner {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            font-size: 1.3rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+        .header .subtitle {
+            font-size: 0.8rem;
+            opacity: 0.75;
+            margin-top: 2px;
+        }
+        .header .badge {
+            background: var(--accent);
+            padding: 4px 14px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            letter-spacing: 1px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 24px;
+            display: grid;
+            grid-template-columns: 480px 1fr;
+            gap: 24px;
+            min-height: calc(100vh - 120px);
+        }
+
+        @media (max-width: 1024px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .panel {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 24px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+        }
+
+        .panel-title {
+            font-size: 1.05rem;
+            font-weight: 700;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid var(--primary);
+            color: var(--primary);
+            letter-spacing: 0.5px;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+        .form-group label {
+            display: block;
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: var(--text);
+        }
+        .form-group .hint {
+            font-size: 0.78rem;
+            color: var(--text-light);
+            margin-bottom: 4px;
+        }
+
+        textarea, input[type="text"], input[type="password"], select {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 0.9rem;
+            font-family: inherit;
+            background: var(--code-bg);
+            transition: border-color 0.2s;
+            resize: vertical;
+        }
+        textarea:focus, input:focus, select:focus {
+            outline: none;
+            border-color: var(--primary-light);
+            box-shadow: 0 0 0 3px rgba(44,95,138,0.1);
+        }
+        textarea { min-height: 280px; }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            letter-spacing: 0.5px;
+            width: 100%;
+        }
+        .btn-primary {
+            background: var(--primary);
+            color: #fff;
+        }
+        .btn-primary:hover { background: var(--primary-light); }
+        .btn-primary:disabled {
+            background: #999;
+            cursor: not-allowed;
+        }
+        .btn-secondary {
+            background: var(--bg);
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+        .btn-secondary:hover { background: var(--border); }
+
+        .btn-row {
+            display: flex;
+            gap: 10px;
+            margin-top: 16px;
+        }
+
+        .status-bar {
+            margin-top: 12px;
+            padding: 10px 14px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            display: none;
+        }
+        .status-bar.show { display: block; }
+        .status-bar.info {
+            background: #e8f0fe;
+            color: #1a3a5c;
+            border: 1px solid #c5d9f0;
+        }
+        .status-bar.error {
+            background: #fde8e8;
+            color: #8b1a1a;
+            border: 1px solid #f5c5c5;
+        }
+        .status-bar.success {
+            background: #e8f5ee;
+            color: #1a5c3a;
+            border: 1px solid #c5e8d5;
+        }
+
+        .output-area {
+            background: var(--code-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 24px;
+            max-height: 78vh;
+            overflow-y: auto;
+            font-size: 0.9rem;
+            line-height: 1.8;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        .output-area.empty {
+            color: var(--text-light);
+            text-align: center;
+            padding: 60px 20px;
+            font-style: italic;
+        }
+
+        .spinner {
+            display: none;
+            width: 18px;
+            height: 18px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .info-cards {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 12px;
+        }
+        .info-card {
+            background: var(--code-bg);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 12px;
+            text-align: center;
+        }
+        .info-card .value {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+        .info-card .label {
+            font-size: 0.75rem;
+            color: var(--text-light);
+            margin-top: 2px;
+        }
+
+        .word-count {
+            font-size: 0.78rem;
+            color: var(--text-light);
+            text-align: right;
+            margin-top: 4px;
+        }
+
+        .section-nav {
+            position: sticky;
+            top: 100px;
+        }
+
+        .note {
+            background: #fffef5;
+            border: 1px solid #e8e0c5;
+            border-left: 3px solid var(--warning);
+            padding: 12px 16px;
+            border-radius: 4px;
+            font-size: 0.82rem;
+            color: #6b5a1a;
+            margin-top: 12px;
+        }
+
+        /* Markdown-style rendering for output */
+        .output-rendered h2 { font-size: 1.2rem; margin: 20px 0 10px; color: var(--primary); border-bottom: 1px solid var(--border); padding-bottom: 6px; }
+        .output-rendered h3 { font-size: 1.05rem; margin: 16px 0 8px; color: var(--primary-light); }
+        .output-rendered blockquote { border-left: 3px solid var(--accent); margin: 12px 0; padding: 6px 16px; background: #fdf8f6; color: #5a3a2a; }
+        .output-rendered code { background: var(--code-bg); padding: 2px 6px; border-radius: 3px; font-size: 0.85rem; }
+        .output-rendered pre { background: #1a1a2e; color: #e0e0e0; padding: 16px; border-radius: 6px; overflow-x: auto; margin: 12px 0; }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-inner">
+            <div>
+                <h1>《系统工程》实证论文重构系统</h1>
+                <div class="subtitle">System Engineering Empirical Paper Architect — 期刊适配诊断 · 结构重排 · 全文润色</div>
+            </div>
+            <span class="badge">v1.0</span>
+        </div>
+    </header>
+
+    <div class="container">
+        <!-- 左侧：输入面板 -->
+        <div>
+            <div class="panel" style="position: sticky; top: 100px;">
+                <div class="panel-title">论文输入</div>
+
+                <div class="form-group">
+                    <label>论文标题（可选）</label>
+                    <input type="text" id="paperTitle" placeholder="输入论文标题...">
+                </div>
+
+                <div class="form-group">
+                    <label>论文全文</label>
+                    <div class="hint">粘贴完整的论文正文，系统将按《系统工程》范式进行诊断与重构</div>
+                    <textarea id="paperText" placeholder="在此粘贴论文全文内容...&#10;&#10;系统将依次完成：&#10;1. 期刊适配诊断&#10;2. 主线提炼与系统框架&#10;3. 全文结构重排&#10;4. 理论链修复&#10;5. 语言润色与AI痕迹清除&#10;6. 风险清单与质量评分"></textarea>
+                    <div class="word-count" id="wordCount">字数：0</div>
+                </div>
+
+                {% if not has_admin_key %}
+                <div class="form-group">
+                    <label>Anthropic API Key</label>
+                    <div class="hint">用于调用 Claude API 处理论文。密钥仅本次会话使用，不存储。</div>
+                    <input type="password" id="apiKey" placeholder="sk-ant-...">
+                </div>
+                {% endif %}
+
+                <div class="form-group">
+                    <label>模型选择</label>
+                    <select id="modelSelect">
+                        <option value="claude-sonnet-4-6">Claude Sonnet 4.6（推荐，性价比最优）</option>
+                        <option value="claude-opus-4-7">Claude Opus 4.7（最强，处理复杂论文）</option>
+                        <option value="claude-haiku-4-5-20251001">Claude Haiku 4.5（最快，初步诊断用）</option>
+                    </select>
+                </div>
+
+                <div class="btn-row">
+                    <button class="btn btn-primary" id="btnProcess" onclick="startProcessing()">
+                        <span class="spinner" id="spinner"></span>
+                        <span id="btnProcessText">开始诊断与重构</span>
+                    </button>
+                    <button class="btn btn-secondary" id="btnStop" onclick="stopProcessing()" style="display:none;">停止</button>
+                </div>
+
+                <div class="status-bar" id="statusBar"></div>
+
+                <div class="info-cards">
+                    <div class="info-card">
+                        <div class="value" id="statChars">--</div>
+                        <div class="label">输入字数</div>
+                    </div>
+                    <div class="info-card">
+                        <div class="value" id="statTime">--</div>
+                        <div class="label">处理耗时</div>
+                    </div>
+                </div>
+
+                <div class="note">
+                    <strong>使用说明：</strong>系统基于《系统工程》期刊实证论文研究逻辑设计。请确保论文包含完整的研究设计信息（数据来源、变量定义、模型设定、实证结果等）。系统不会虚构任何数据或结果——缺失内容将标注【需要作者补充】。
+                </div>
+            </div>
+        </div>
+
+        <!-- 右侧：输出面板 -->
+        <div>
+            <div class="panel">
+                <div class="panel-title">诊断与重构结果</div>
+                <div class="output-area empty" id="outputArea">
+                    处理结果将在此显示。<br><br>
+                    系统将输出五部分内容：<br>
+                    <strong>一、期刊适配诊断</strong> — 识别研究主线、系统边界、关键问题<br>
+                    <strong>二、建议的全文结构</strong> — 各章节核心问题与题目建议<br>
+                    <strong>三、完整修改稿</strong> — 逐段重写，保留全部有效信息<br>
+                    <strong>四、修改说明</strong> — 逻辑补强、重复压缩、因果降级等<br>
+                    <strong>五、风险清单与质量评分</strong> — 100分制，多维度评估
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let abortController = null;
+        let processingStartTime = null;
+
+        const paperText = document.getElementById("paperText");
+        const outputArea = document.getElementById("outputArea");
+        const statusBar = document.getElementById("statusBar");
+        const btnProcess = document.getElementById("btnProcess");
+        const btnStop = document.getElementById("btnStop");
+        const btnProcessText = document.getElementById("btnProcessText");
+        const spinner = document.getElementById("spinner");
+
+        // 字数统计
+        paperText.addEventListener("input", () => {
+            const len = paperText.value.length;
+            document.getElementById("wordCount").textContent = `字数：${len}`;
+            document.getElementById("statChars").textContent = len > 0 ? len.toLocaleString() : "--";
+        });
+
+        function showStatus(msg, type) {
+            statusBar.textContent = msg;
+            statusBar.className = `status-bar ${type} show`;
+        }
+
+        function hideStatus() {
+            statusBar.className = "status-bar";
+        }
+
+        function setLoading(loading) {
+            btnProcess.disabled = loading;
+            spinner.style.display = loading ? "inline-block" : "none";
+            btnProcessText.textContent = loading ? "处理中..." : "开始诊断与重构";
+            btnStop.style.display = loading ? "inline-flex" : "none";
+        }
+
+        function startProcessing() {
+            const text = paperText.value.trim();
+            if (!text) {
+                showStatus("请先粘贴论文内容", "error");
+                return;
+            }
+            if (text.length < 500) {
+                showStatus("论文内容过短（至少500字），请检查后重新提交", "error");
+                return;
+            }
+
+            const useStream = document.getElementById("modelSelect").value !== "claude-haiku-4-5-20251001";
+            if (useStream) {
+                startStreamProcessing();
+            } else {
+                startSyncProcessing();
+            }
+        }
+
+        async function startSyncProcessing() {
+            abortController = new AbortController();
+            setLoading(true);
+            outputArea.className = "output-area";
+            outputArea.innerHTML = "";
+            processingStartTime = Date.now();
+            hideStatus();
+
+            try {
+                const apiKey = document.getElementById("apiKey").value.trim();
+                const model = document.getElementById("modelSelect").value;
+                const title = document.getElementById("paperTitle").value.trim();
+
+                const response = await fetch("/api/process", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        paper_text: paperText.value,
+                        paper_title: title,
+                        api_key: apiKey,
+                        model: model
+                    }),
+                    signal: abortController.signal
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    renderMarkdownOutput(data.result);
+                    const elapsed = ((Date.now() - processingStartTime) / 1000).toFixed(0);
+                    document.getElementById("statTime").textContent = elapsed + "s";
+                    showStatus(`处理完成，耗时 ${elapsed} 秒`, "success");
+                } else {
+                    outputArea.className = "output-area empty";
+                    outputArea.textContent = `错误：${data.error}`;
+                    showStatus(data.error, "error");
+                }
+            } catch (err) {
+                if (err.name !== "AbortError") {
+                    outputArea.className = "output-area empty";
+                    outputArea.textContent = `请求失败：${err.message}`;
+                    showStatus(`请求失败：${err.message}`, "error");
+                }
+            } finally {
+                setLoading(false);
+                abortController = null;
+            }
+        }
+
+        async function startStreamProcessing() {
+            abortController = new AbortController();
+            setLoading(true);
+            outputArea.className = "output-area";
+            outputArea.innerHTML = "";
+            processingStartTime = Date.now();
+            hideStatus();
+            showStatus("正在分析论文结构...", "info");
+
+            try {
+                const apiKey = document.getElementById("apiKey").value.trim();
+                const model = document.getElementById("modelSelect").value;
+                const title = document.getElementById("paperTitle").value.trim();
+
+                const response = await fetch("/api/process/stream", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        paper_text: paperText.value,
+                        paper_title: title,
+                        api_key: apiKey,
+                        model: model
+                    }),
+                    signal: abortController.signal
+                });
+
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+                let buffer = "";
+                let fullText = "";
+                let doneReceived = false;
+
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+
+                    buffer += decoder.decode(value, { stream: true });
+                    const lines = buffer.split("\n");
+                    buffer = lines.pop() || "";
+
+                    for (const line of lines) {
+                        if (line.startsWith("data: ")) {
+                            const data = line.slice(6).trim();
+                            if (data === "[DONE]") {
+                                doneReceived = true;
+                                continue;
+                            }
+                            try {
+                                const parsed = JSON.parse(data);
+                                if (parsed.error) {
+                                    outputArea.innerHTML += `<span style="color:var(--accent);">\n\n[错误] ${parsed.error}</span>`;
+                                } else if (parsed.content) {
+                                    fullText += parsed.content;
+                                    // Streaming render: show raw text with basic formatting during stream
+                                    if (fullText.length < 500) {
+                                        outputArea.innerHTML = escapeHtml(fullText);
+                                    } else {
+                                        // Partial render for performance during stream
+                                        outputArea.innerHTML = escapeHtml(fullText);
+                                    }
+                                    outputArea.scrollTop = outputArea.scrollHeight;
+                                }
+                            } catch {}
+                        }
+                    }
+                }
+
+                if (fullText) {
+                    renderMarkdownOutput(fullText);
+                    const elapsed = ((Date.now() - processingStartTime) / 1000).toFixed(0);
+                    document.getElementById("statTime").textContent = elapsed + "s";
+                    showStatus(`处理完成，耗时 ${elapsed} 秒`, "success");
+                } else if (!doneReceived) {
+                    showStatus("未收到完整响应", "error");
+                }
+
+            } catch (err) {
+                if (err.name !== "AbortError") {
+                    outputArea.innerHTML += `\n\n<span style="color:var(--accent);">[请求失败：${escapeHtml(err.message)}]</span>`;
+                    showStatus(`请求失败：${err.message}`, "error");
+                }
+            } finally {
+                setLoading(false);
+                abortController = null;
+            }
+        }
+
+        function stopProcessing() {
+            if (abortController) {
+                abortController.abort();
+                abortController = null;
+                setLoading(false);
+                showStatus("处理已停止", "info");
+            }
+        }
+
+        // Simple markdown-like rendering
+        function renderMarkdownOutput(text) {
+            let html = escapeHtml(text);
+
+            // Headers
+            html = html.replace(/^## (.+)$/gm, '<h2>$1</h2>');
+            html = html.replace(/^### (.+)$/gm, '<h3>$1</h3>');
+            html = html.replace(/^#### (.+)$/gm, '<h4 style="color:var(--primary-light);margin:12px 0 4px;">$1</h4>');
+
+            // Bold
+            html = html.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+
+            // Blockquote
+            html = html.replace(/^&gt; (.+)$/gm, '<blockquote>$1</blockquote>');
+
+            // Inline code
+            html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
+
+            // Horizontal rules
+            html = html.replace(/^---+$/gm, '<hr style="border:none;border-top:1px solid var(--border);margin:16px 0;">');
+
+            // Lists
+            html = html.replace(/^- (.+)$/gm, '<li style="margin-left:20px;">$1</li>');
+            html = html.replace(/^\d+\. (.+)$/gm, '<li style="margin-left:20px;">$1</li>');
+
+            outputArea.className = "output-area output-rendered";
+            outputArea.innerHTML = html;
+        }
+
+        function escapeHtml(str) {
+            const div = document.createElement("div");
+            div.appendChild(document.createTextNode(str));
+            return div.innerHTML;
+        }
+
+        // Keyboard shortcut: Ctrl/Cmd + Enter to submit
+        document.addEventListener("keydown", (e) => {
+            if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+                e.preventDefault();
+                if (!btnProcess.disabled) startProcessing();
+            }
+        });
+    </script>
+</body>
+</html>
